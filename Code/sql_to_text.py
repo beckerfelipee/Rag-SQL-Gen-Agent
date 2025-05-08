@@ -11,7 +11,9 @@ llm = ChatOllama(model="llama3.2:3b")
 def create_temp_table(query):
     db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
     temp_table =  db.run(query)
-    print(temp_table)
+    return temp_table
+
+
  
 
 
