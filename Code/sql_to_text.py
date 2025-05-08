@@ -3,21 +3,26 @@ from langchain_community.chat_models import ChatOllama
 from langchain_community.utilities import SQLDatabase
 import sqlite3
 import pandas as pd
-from langchain_experiments.agents import create_pandas_dataframe_agent
-
 
 db_path = "DB//sakila.db"
 llm = ChatOllama(model="llama3.2:3b")
 
 
-def create_temp_table(question, query):
+def create_temp_table(query):
+    db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
+    temp_table =  db.run(query)
+    print(temp_table)
+ 
+
+
+"""
     conn = sqlite3.connect(db_path)
-    temp_table = pd.read_sql(query, conn)    
+    temp_table = pd.read_sql(query, conn)
     conn2 = sqlite3.connect("DB\\Temporary_db\\temporary.db")
     temp_table.to_sql("temporary", conn2, index=False, if_exists="replace")
 
     agent = create_pandas_dataframe_agent(llm, temp_table, verbose=True)
-    response = agent.run(question)
+    response = agent.run(question) """
 
 system_message = """
 Given an input question, create a response that uses the {table} to answer the question.
@@ -55,5 +60,5 @@ if __name__== '__main__':
     question = "How many actors are there in the database?"
     result = write_query({"question": question})
     print(result)
-    response = create_temp_table(question, result['query'])
-    print(result)
+    response = create_temp_table(result['query'])
+    print(response)
