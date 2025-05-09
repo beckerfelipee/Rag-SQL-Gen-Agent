@@ -14,19 +14,11 @@ class State(TypedDict):
     result: str
     answer: str
 
-load_dotenv()
-
-# --- Constants --- #
-
-llm_model = "llama3.2:3b"  # Model name for Ollama
-ollama_server = os.getenv("OLLAMA_SERVER")  # URL for the Ollama server
-
 # Connect to DB
 db = SQLDatabase.from_uri("sqlite:///DB//sakila.db")
 
 # Initialize the model
-# llm = ChatOllama(model="llama3.2:3b")
-llm = ChatOllama(base_url=ollama_server, model=llm_model)
+llm = ChatOllama(model="llama3.2:3b")
 
 # Modify the system message to include instructions for JSON output
 system_message = """
