@@ -11,6 +11,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatOllama
 import json
 
+# Execute SQL queries
+import ast # transform string to python literal
+
 # Generate Answer
 from typing import TypedDict
 
@@ -89,7 +92,7 @@ def test_model(llm: ChatOllama) -> None:
 
 # Write SQL query
 
-def write_query(question: str, llm: ChatOllama, context_tables: str, max_results: int = cfg.MAX_RESULTS, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
+def write_query(question: str, llm: ChatOllama, context_tables: str, max_results: int = cfg.MAX_RESULTS_QUERY, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
     """Generate SQL query to fetch information."""
 
     user_prompt = "Question: {input}"
@@ -127,12 +130,13 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, max_results
     
 
 # Execute SQL query (Create view)
-
 def create_view(query: str, db):
     '''Uses and SQL query to retrieve a table from the DB and calls an llm to generate a 
     text answer to the user input based on that table'''
     temp_table =  db.run(query)
-    return temp_table
+    results = ast.literal_eval(temp_table)
+    total_count = len(results)
+    return results, total_count
 
 
 # Answer generation
@@ -145,17 +149,7 @@ class State(TypedDict):
 
 def generate_answer(state: State, llm: ChatOllama):
     """Answer question using retrieved information as context."""
-    prompt = (
-        "Given the following user question, corresponding SQL query, "
-        "and SQL result, answer the user question with the information obtained."
-        "Present your answer in a simple, easy-to-understand, and objective manner."
-        "If the query has a limit, also declare that the result is limited to the first N rows."
-        "Do NOT suggest alternative queries or hypothetical solutions.\n\n"
-        f'Question: {state["question"]}\n'
-        f'SQL Query: {state["query"]}\n'
-        f'SQL Result: {state["result"]}\n\n'
-        "If query or result is empty, informs the user that a query couldn't be generated"
-        "Important: Do not make assumptions beyond what is explicitly shown in the results."
-    )
+    prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(question=state["question"],query=state["query"],result=state["result"])
+    
     response = llm.invoke(prompt)
     return {"answer": response.content}

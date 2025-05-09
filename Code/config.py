@@ -25,12 +25,15 @@ EMBEDDING_MODEL = "nomic-embed-text:latest"
 # --- LLM model to use for natural language responses --- #
 
 # LLM model to use for generating SQL queries and answers
+
 LLM_MODEL = "llama3.2:3b"
+LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
 
 # System message to generate SQL queries
 
 DB_DIALECT_BASE = "sqlite"  # Base dialect for the database
-MAX_RESULTS = 30  # Maximum number of results to return in the SQL query
+MAX_RESULTS_QUERY = 3000  # Maximum number of results to return in the SQL query
+MAX_RESULTS_LLM = 30  # Maximum number of results to return in the LLM response
 
 SQL_GEN_SYSTEM_MESSAGE = """
 Given an input question, create a syntactically correct {dialect} query to
@@ -51,6 +54,24 @@ Return your response as a JSON object with the following format:
 {{
   "query": "your SQL query here"
 }}
+"""
+
+ANSWER_GEN_SYSTEM_MESSAGE = """
+Given the following user question, corresponding SQL query, and SQL result, answer the user
+question using the information from the SQL result.
+Present your answer in a simple, easy-to-understand, and objective manner.
+Do NOT suggest alternative queries or hypothetical solutions.
+
+Question: {question}
+SQL Query: {query}
+SQL Result: {result}
+
+Important instructions:
+- Your response must include all relevant information
+- If query or result is empty, inform the user that a query couldn't be generated or no results were found
+- Do not make assumptions beyond what is explicitly shown in the results
+- Format data in an easily readable way appropriate to the question (tables, lists, etc.)
+- Use natural language to explain the findings from the data
 """
 
 
