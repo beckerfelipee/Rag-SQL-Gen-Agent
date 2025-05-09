@@ -11,11 +11,17 @@ class State(TypedDict):
     result: str
     answer: str
 
+# --- Constants --- #
+
+llm_model = "llama3.2:3b"  # Model name for Ollama
+ollama_server = "http://lab.entercoding.com:11434"  # URL for the Ollama server
+
 # Connect to DB
 db = SQLDatabase.from_uri("sqlite:///DB//sakila.db")
 
 # Initialize the model
-llm = ChatOllama(model="llama3.2:3b")
+# llm = ChatOllama(model="llama3.2:3b")
+llm = ChatOllama(base_url=ollama_server, model=llm_model)
 
 # Modify the system message to include instructions for JSON output
 system_message = """
@@ -54,7 +60,7 @@ def write_query(state: State):
         }
     )
 
-    print(prompt)
+    # print(prompt)
     
     # Get the response from the LLM
     response = llm.invoke(prompt)
@@ -80,4 +86,4 @@ def test_model():
 
 if __name__ == '__main__':
     result = write_query({"question": "How many actors are there in the database?"})
-    print(result)
+    print("\n", result)
