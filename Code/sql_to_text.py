@@ -1,8 +1,6 @@
 from question_to_sql import write_query
 from langchain_community.chat_models import ChatOllama
 from langchain_community.utilities import SQLDatabase
-import sqlite3
-import pandas as pd
 
 db_path = "DB//sakila.db"
 llm = ChatOllama(model="llama3.2:3b")
