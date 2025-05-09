@@ -8,6 +8,7 @@ from langchain_community.utilities import SQLDatabase
 from typing import TypedDict
 import json
 
+
 class State(TypedDict):
     question: str
     query: str

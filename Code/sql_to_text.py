@@ -1,16 +1,40 @@
+from config import db_path
+
 from question_to_sql import write_query
 from langchain_community.chat_models import ChatOllama
 from langchain_community.utilities import SQLDatabase
+from typing import TypedDict
+#from main import State
 
-db_path = "DB//sakila.db"
+'''Uses and SQL query to retrieve a table from the DB and calls an llm to generate a text answer to the user input based on that table'''
+
+
 llm = ChatOllama(model="llama3.2:3b")
 
+class State(TypedDict):
+    question: str
+    query: str
+    result: str
+    answer: str
 
-def create_temp_table(query):
+
+def create_view(query):
     db = SQLDatabase.from_uri(f"sqlite:///{db_path}")
     temp_table =  db.run(query)
     return temp_table
 
+def generate_answer(state: State):
+    """Answer question using retrieved information as context."""
+    prompt = (
+        "Given the following user question, corresponding SQL query, "
+        "and SQL result, answer the user question.\n\n"
+        f'Question: {state["question"]}\n'
+        f'SQL Query: {state["query"]}\n'
+        f'SQL Result: {state["result"]}'
+    )
+    response = llm.invoke(prompt)
+    return {"answer": response.content}
+ 
 
  
 
@@ -50,15 +74,11 @@ user_prompt = "Question: {input}"
 
 
 
-
-
-
-
-
-
 if __name__== '__main__':
-    question = "How many actors are there in the database?"
-    result = write_query({"question": question})
-    print(result)
-    response = create_temp_table(result['query'])
+    state = State()
+    state.question = "How many actors are there in the database?"
+    print(state)
+    state.query = write_query({"question": state.question})['query']
+    print(state)
+    response = create_view(state.query)
     print(response)
