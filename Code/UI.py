@@ -35,26 +35,27 @@ if __name__ == '__main__':
             start_ollama()
 
     st.set_page_config(page_title="RAG SQL App", page_icon="🤖", layout="wide")
-    st.title("RAG SQL App Interface")
+    st.title("🤖 RAG SQL App Interface")
     st.write("You can ask questions about the database and get answers in natural language.")
 
-    st.header("🔍 Question Answering")
-    prompt = st.text_area(label="Ask a question about the database:", placeholder="Type your question here...")
-    
+    #st.header("🔍 Question Answering")
 
     # Criar colunas para os popovers
-    col1, col2, col3, col4, col5 = st.columns([1, 4, 4, 4, 4])
+    col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
+    info = st.empty()
 
-    submit_button = col1.button(label="Submit")
-
-    if submit_button:
-        if prompt:
-            info = st.empty()
+    with st.container(height=650, border=False):
+        messages = st.container(height=550)
+        if prompt := st.chat_input("Ask a question about the database", max_chars=300):
+            messages.chat_message("user").write(prompt)
+            # st.toast("Thinking..")
+            
             info.info("Processing your question...")
-
 
             state = fn.State()
             state["question"] = prompt
+            state["query"] = ""
+            state["result"] = ""
 
             # Retrieve relevant tables from the vector database
             
@@ -62,49 +63,44 @@ if __name__ == '__main__':
             tables = fn.query_collection(prompt=state["question"])
             context = tables["documents"]
             context_tables = "\n---\n".join(context)
-
-            with col2.popover("📅 Retrieved Tables", use_container_width=100):
-                if tables:  
+            
+            if tables['ids'] != []:
+                with col1.popover("📅 Retrieved Tables", use_container_width=100):
                     for i in range(len(tables["ids"])):  # Itera sobre o comprimento de 'ids'
                         st.write(f"\n-----------\nID: {tables['ids'][i]}, Distance: {tables['distances'][i]}, \n\nDocument: \n{tables['documents'][i]}\n")
+            
+                # Generate SQL query using the retrieved tables
+
+                info.status("Generating SQL query...")
+                state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=context_tables)['query']
+                if state["query"] != "Error generating query":
+                    with col2.popover("📝 Generated SQL Query", use_container_width=100):
+                        st.write(state["query"])
+                
+                # Execute the SQL query and retrieve results
+                
+                info.status("Executing SQL query...")
+                if state["query"] == "Error generating query":
+                    state["result"] = "Empty"
                 else:
-                    st.warning("No results found in the vector database.")
-            
-            # Generate SQL query using the retrieved tables
+                    results, total_count = fn.create_view(query=state["query"], db=db)
 
-            info.status("Generating SQL query...")
-            state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=context_tables)['query']
-            with col3.popover("📝 Generated SQL Query", use_container_width=100):
-                st.write(state["query"])
-            
-            # Execute the SQL query and retrieve results
-            
-            info.status("Executing SQL query...")
-            if state["query"] == "Error generating query":
-                state["result"] = "Empty"
-            else:
-                results, total_count = fn.create_view(query=state["query"], db=db)
+                    with col3.popover("📊 Query Results", use_container_width=100):
+                        st.write(f"Total Results: {total_count}")
+                        st.write("Results: ", results)
 
-                with col4.popover("📊 Query Results", use_container_width=100):
-                    st.write(f"Total Results: {total_count}")
-                    st.write("Results: ", results)
-
-                if len(results) > cfg.MAX_RESULTS_LLM:
-                    limited_results = results[:cfg.MAX_RESULTS_LLM]
-                    state["result"] = f"Showing only the first {cfg.MAX_RESULTS_LLM}:\n{str(limited_results)}"
-                else:
-                    state["result"] = str(results)
+                    if len(results) > cfg.MAX_RESULTS_LLM:
+                        limited_results = results[:cfg.MAX_RESULTS_LLM]
+                        state["result"] = f"Showing only the first {cfg.MAX_RESULTS_LLM}:\n{str(limited_results)}"
+                    else:
+                        state["result"] = str(results)
                 
             # Generate answer using the SQL result
 
             info.status("Generating answer...")
             state["answer"] = fn.generate_answer(state=state, llm=llm)
+            output = state["answer"]
 
-            st.header("💬 Answer")
-            st.write_stream(state["answer"])
+            messages.chat_message("AI").write_stream(state["answer"])
+            info.empty() 
 
-            info.subheader("") 
-
-        
-        else:
-            st.warning("Please enter a question to ask.")
