@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+import os
+
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatOllama
 from langchain_core.output_parsers import JsonOutputParser
@@ -11,10 +14,12 @@ class State(TypedDict):
     result: str
     answer: str
 
+load_dotenv()
+
 # --- Constants --- #
 
 llm_model = "llama3.2:3b"  # Model name for Ollama
-ollama_server = "http://lab.entercoding.com:11434"  # URL for the Ollama server
+ollama_server = os.getenv("OLLAMA_SERVER")  # URL for the Ollama server
 
 # Connect to DB
 db = SQLDatabase.from_uri("sqlite:///DB//sakila.db")
