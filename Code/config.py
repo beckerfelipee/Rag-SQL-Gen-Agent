@@ -29,6 +29,9 @@ LLM_MODEL = "llama3.2:3b"
 
 # System message to generate SQL queries
 
+DB_DIALECT_BASE = "sqlite"  # Base dialect for the database
+MAX_RESULTS = 30  # Maximum number of results to return in the SQL query
+
 SQL_GEN_SYSTEM_MESSAGE = """
 Given an input question, create a syntactically correct {dialect} query to
 run to help find the answer. Only query for the few relevant columns given the question.
@@ -39,6 +42,10 @@ pay attention to which column is in which table.
 
 Only use the following tables:
 {table_info}
+
+IMPORTANT: If your query could potentially return many rows your query 
+MUST limit the number of returned rows to a maximum of {max_results}, using
+the appropriate LIMIT, TOP, or equivalent clause for the {dialect} SQL dialect.
 
 Return your response as a JSON object with the following format:
 {{

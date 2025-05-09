@@ -89,7 +89,7 @@ def test_model(llm: ChatOllama) -> None:
 
 # Write SQL query
 
-def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect: str = "sqlite") -> dict:
+def write_query(question: str, llm: ChatOllama, context_tables: str, max_results: int = cfg.MAX_RESULTS, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
     """Generate SQL query to fetch information."""
 
     user_prompt = "Question: {input}"
@@ -103,6 +103,7 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect:
             "dialect": db_dialect,
             "table_info": context_tables,
             "input": question,
+            "max_results": max_results,
         }
     )
 
@@ -146,10 +147,15 @@ def generate_answer(state: State, llm: ChatOllama):
     """Answer question using retrieved information as context."""
     prompt = (
         "Given the following user question, corresponding SQL query, "
-        "and SQL result, answer the user question.\n\n"
+        "and SQL result, answer the user question with the information obtained."
+        "Present your answer in a simple, easy-to-understand, and objective manner."
+        "If the query has a limit, also declare that the result is limited to the first N rows."
+        "Do NOT suggest alternative queries or hypothetical solutions.\n\n"
         f'Question: {state["question"]}\n'
         f'SQL Query: {state["query"]}\n'
-        f'SQL Result: {state["result"]}'
+        f'SQL Result: {state["result"]}\n\n'
+        "If query or result is empty, informs the user that a query couldn't be generated"
+        "Important: Do not make assumptions beyond what is explicitly shown in the results."
     )
     response = llm.invoke(prompt)
     return {"answer": response.content}

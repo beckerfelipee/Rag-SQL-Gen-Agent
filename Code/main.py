@@ -19,7 +19,7 @@ if __name__ == '__main__':
     
     # Script to run the application
     state = fn.State()
-    state["question"] = "How many actors are there in the database?"
+    state["question"] = "What is the name of the actor with ID 1?"
     print("Question: ", state["question"])
 
     tables = fn.query_collection(prompt=state["question"])
@@ -29,8 +29,11 @@ if __name__ == '__main__':
     state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=context_tables)['query']
     print("Query: ", state["query"])
 
-    state["result"] = fn.create_view(query=state["query"], db=db)
-    print("Result: ", state["result"])
+    if state["query"] != "Error generating query":
+        state["result"] = fn.create_view(query=state["query"], db=db)
+        print("Result: ", state["result"])
+    else:
+        state["result"] = "Empty"
 
     state["answer"] = fn.generate_answer(state=state, llm=llm)["answer"]
     print("Answer: ", state["answer"])
