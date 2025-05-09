@@ -1,4 +1,6 @@
 import os
+import atexit
+from local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
 from langchain_community.utilities import SQLDatabase
 from langchain_community.chat_models import ChatOllama
 from dotenv import load_dotenv
@@ -7,6 +9,10 @@ import functions as fn
 
 
 if __name__ == '__main__':
+    if cfg.RUN_LOCALLY:
+        atexit.register(terminate_ollama_processes)
+        if not is_ollama_running():
+            start_ollama()
 
     # Load environment variables from .env file
     load_dotenv()
@@ -26,11 +32,15 @@ if __name__ == '__main__':
     context = tables["documents"]
     context_tables = "\n---\n".join(context)
 
+    print("Context Tables: ", context_tables)
+
     state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=context_tables)['query']
     print("Query: ", state["query"])
 
     if state["query"] != "Error generating query":
         results, total_count = fn.create_view(query=state["query"], db=db)
+
+        # print("Results: ", results) # All results of the query
 
         if len(results) > cfg.MAX_RESULTS_LLM:
             limited_results = results[:cfg.MAX_RESULTS_LLM]

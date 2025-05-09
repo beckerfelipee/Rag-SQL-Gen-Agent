@@ -151,5 +151,10 @@ def generate_answer(state: State, llm: ChatOllama):
     """Answer question using retrieved information as context."""
     prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(question=state["question"],query=state["query"],result=state["result"])
     
-    response = llm.invoke(prompt)
-    return {"answer": response.content}
+    response = llm.stream(prompt)
+
+    for chunk in response:
+        yield chunk.content
+
+
+    # return {"answer": response.content}
