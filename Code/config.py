@@ -1,6 +1,6 @@
 # --- OLLAMA Server Configuration --- #
 
-RUN_LOCALLY = True  # Set to True if running the OLLAMA server locally
+RUN_LOCALLY = False  # Set to True if running the OLLAMA server locally
 
 # --- Vector Database and Embedding Configuration --- #
 

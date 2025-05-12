@@ -7,12 +7,18 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../C
 import sqlite3
 from Code.functions import write_query, db_extract
 from langchain_community.chat_models import ChatOllama
+from langchain_community.utilities import SQLDatabase
 import Code.config as cfg
+from dotenv import load_dotenv
 
 # Connect to the Sakila database
-db_path = "DB/sakila.db"
-connection = sqlite3.connect(db_path)
-cursor = connection.cursor()
+
+load_dotenv()
+db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
+
+#db_path = "DB/sakila.db"
+#connection = sqlite3.connect(db_path)
+#cursor = connection.cursor()
 
 # Define a list of questions to test
 questions = [
@@ -30,7 +36,7 @@ questions = [
 
 # Initialize the actual LLM
 llm = ChatOllama(model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
-context_tables = db_extract(connection)
+context_tables = db_extract(db)
 
 # Test each question
 for question in questions:
