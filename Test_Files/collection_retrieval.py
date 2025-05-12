@@ -1,4 +1,10 @@
 import atexit
+import sys
+import os
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../Code')))
+
+
 from Code.local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
 from Code.functions import query_collection
 from Code.config import RUN_LOCALLY

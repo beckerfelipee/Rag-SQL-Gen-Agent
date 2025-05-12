@@ -21,13 +21,14 @@ if __name__ == '__main__':
     db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
 
     # Initialize the model
-    llm = ChatOllama(base_url=os.getenv("OLLAMA_SERVER"), model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
+    llm = ChatOllama(base_url=os.getenv("OLLAMA_LOCAL_SERVER"), model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
     
     # Script to run the application
     state = fn.State()
     state["question"] = "How many customers are there in the database?"
     print("Question: ", state["question"])
 
+    # 
     tables = fn.query_collection(prompt=state["question"])
     context = tables["documents"]
     context_tables = "\n---\n".join(context)
