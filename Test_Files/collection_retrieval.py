@@ -28,6 +28,7 @@ if __name__ == "__main__":
         "Who are the top 5 actors with the most movies?", #7
         "List all movies released after 2010.", #8
         "What are the top 3 actors from the top 3 most rented movie categories?" #9
+        "How the table 'actor' is related to the table 'film'?" #10
     ]
     
     result = query_collection(questions[2])
