@@ -5,7 +5,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../Code')))
 
 import sqlite3
-from Code.functions import write_query, db_extract
+from Code.functions import write_query, db_extract, query_collection
 from langchain_community.chat_models import ChatOllama
 from langchain_community.utilities import SQLDatabase
 import Code.config as cfg
@@ -17,8 +17,8 @@ load_dotenv()
 db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
 
 #db_path = "DB/sakila.db"
-#connection = sqlite3.connect(db_path)
-#cursor = connection.cursor()
+connection = sqlite3.connect(cfg.DB_PATH)
+cursor = connection.cursor()
 
 # Define a list of questions to test
 questions = [
@@ -34,25 +34,129 @@ questions = [
     "List all cities where the stores are located."
 ]
 
-# Initialize the actual LLM
-llm = ChatOllama(model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
-context_tables = db_extract(db)
+# Expanded expected queries to include more variations and edge cases
+expected_queries = [
+    ["SELECT * FROM customer;", "SELECT customer_id, first_name, last_name, email FROM customer;", "SELECT first_name, last_name FROM customer;", "SELECT customer_id, first_name FROM customer;"],
+    ["SELECT title, rental_rate FROM film ORDER BY rental_rate DESC LIMIT 5;", "SELECT rental_rate, title FROM film ORDER BY rental_rate DESC LIMIT 5;", "SELECT title FROM film ORDER BY rental_rate DESC LIMIT 5;", "SELECT title FROM film WHERE rental_rate >= (SELECT MAX(rental_rate) FROM film) LIMIT 5;"],
+    ["SELECT COUNT(*) FROM actor;", "SELECT COUNT(actor_id) FROM actor;", "SELECT COUNT(*) AS total_actors FROM actor;", "SELECT COUNT(DISTINCT actor_id) FROM actor;"],
+    ["SELECT * FROM inventory WHERE film_id = (SELECT film_id FROM film WHERE title = 'ACADEMY DINOSAUR');", "SELECT inventory_id, film_id, store_id FROM inventory WHERE film_id = (SELECT film_id FROM film WHERE title = 'ACADEMY DINOSAUR');", "SELECT inventory_id FROM inventory WHERE film_id = (SELECT film_id FROM film WHERE title = 'ACADEMY DINOSAUR');", "SELECT * FROM inventory WHERE film_id IN (SELECT film_id FROM film WHERE title LIKE 'ACADEMY%');"],
+    ["SELECT store_id, COUNT(*) AS staff_count FROM staff GROUP BY store_id ORDER BY staff_count DESC;", "SELECT COUNT(*) AS staff_count, store_id FROM staff GROUP BY store_id ORDER BY staff_count DESC;", "SELECT store_id FROM staff GROUP BY store_id ORDER BY COUNT(*) DESC;", "SELECT store_id, COUNT(staff_id) AS staff_count FROM staff GROUP BY store_id HAVING COUNT(staff_id) > 1 ORDER BY staff_count DESC;"],
+    ["SELECT title FROM film JOIN film_category USING(film_id) JOIN category USING(category_id) WHERE category.name = 'Action';", "SELECT film.title FROM film JOIN film_category ON film.film_id = film_category.film_id JOIN category ON film_category.category_id = category.category_id WHERE category.name = 'Action';", "SELECT title FROM film WHERE film_id IN (SELECT film_id FROM film_category WHERE category_id = (SELECT category_id FROM category WHERE name = 'Action'));", "SELECT DISTINCT title FROM film JOIN film_category ON film.film_id = film_category.film_id WHERE film_category.category_id = (SELECT category_id FROM category WHERE name = 'Action');"],
+    ["SELECT SUM(amount) FROM payment;", "SELECT SUM(payment.amount) FROM payment;", "SELECT SUM(amount) AS total_revenue FROM payment;", "SELECT COALESCE(SUM(amount), 0) FROM payment;"],
+    ["SELECT * FROM rental WHERE customer_id = 1;", "SELECT rental_id, customer_id, inventory_id, return_date FROM rental WHERE customer_id = 1;", "SELECT rental_id, inventory_id FROM rental WHERE customer_id = 1;", "SELECT rental_id FROM rental WHERE customer_id = 1 AND return_date IS NOT NULL;"],
+    ["SELECT title FROM film WHERE film_id NOT IN (SELECT film_id FROM inventory WHERE inventory_id IN (SELECT inventory_id FROM rental WHERE return_date IS NULL));", "SELECT film.title FROM film WHERE film.film_id NOT IN (SELECT inventory.film_id FROM inventory WHERE inventory.inventory_id IN (SELECT rental.inventory_id FROM rental WHERE rental.return_date IS NULL));", "SELECT title FROM film WHERE film_id NOT IN (SELECT film_id FROM inventory WHERE inventory_id IN (SELECT inventory_id FROM rental WHERE return_date IS NULL));", "SELECT DISTINCT title FROM film WHERE film_id NOT IN (SELECT film_id FROM inventory WHERE inventory_id IN (SELECT inventory_id FROM rental WHERE return_date IS NULL));"],
+    ["SELECT city FROM address JOIN store USING(address_id);", "SELECT address.city FROM address JOIN store ON address.address_id = store.address_id;", "SELECT city FROM address WHERE address_id IN (SELECT address_id FROM store);", "SELECT DISTINCT city FROM address JOIN store ON address.address_id = store.address_id;"]
+]
 
-# Test each question
-for question in questions:
+# Initialize the actual LLM
+
+base_url = os.getenv("OLLAMA_LOCAL_SERVER") if cfg.RUN_LOCALLY else os.getenv("OLLAMA_SERVER")
+llm = ChatOllama(base_url=base_url, model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE, top_p=cfg.LLM_TOP_P)
+
+# Define context tables dynamically for each question
+context_tables_list = [
+    """
+    Table: customer
+    Columns: customer_id, store_id, first_name, last_name, email, address_id, active, create_date, last_update
+    """,
+    """
+    Table: film
+    Columns: film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update
+    """,
+    """
+    Table: actor
+    Columns: actor_id, first_name, last_name, last_update
+    """,
+    """
+    Table: inventory
+    Columns: inventory_id, film_id, store_id, last_update
+    """,
+    """
+    Table: staff
+    Columns: staff_id, first_name, last_name, address_id, picture, email, store_id, active, username, password, last_update
+    """,
+    """
+    Table: film
+    Columns: film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update
+
+    Table: category
+    Columns: category_id, name, last_update
+
+    Table: film_category
+    Columns: film_id, category_id, last_update
+    """,
+    """
+    Table: payment
+    Columns: payment_id, customer_id, staff_id, rental_id, amount, payment_date, last_update
+    """,
+    """
+    Table: rental
+    Columns: rental_id, rental_date, inventory_id, customer_id, return_date, staff_id, last_update
+    """,
+    """
+    Table: film
+    Columns: film_id, title, description, release_year, language_id, original_language_id, rental_duration, rental_rate, length, replacement_cost, rating, special_features, last_update
+
+    Table: inventory
+    Columns: inventory_id, film_id, store_id, last_update
+
+    Table: rental
+    Columns: rental_id, rental_date, inventory_id, customer_id, return_date, staff_id, last_update
+    """,
+    """
+    Table: address
+    Columns: address_id, address, address2, district, city_id, postal_code, phone, last_update
+
+    Table: store
+    Columns: store_id, manager_staff_id, address_id, last_update
+
+    Table: city
+    Columns: city_id, city, country_id, last_update
+    """
+]
+
+# Compare the results of the generated query and the expected queries
+for i, question in enumerate(questions):
     print(f"Testing question: {question}")
 
     # Generate the query using the actual LLM
-    result = write_query(question = question, llm = llm, context_tables = context_tables)
+    context_tables = query_collection(question)
+    result = write_query(question=question, llm=llm, context_tables=context_tables)
     query = result.get("query")
+    print('Generated query: ', query)
 
-    # Execute the query
+    # Validate the generated query
+    if not query.strip().lower().startswith("select"):
+        print(f"Generated query is not a SELECT query: {query} \n")
+        continue
+
+    # Execute the generated query
     try:
         cursor.execute(query)
-        rows = cursor.fetchall()
-        print(f"Query executed successfully. Results: {rows[:5]} (showing up to 5 rows)")
+        generated_results = cursor.fetchall()
+        print(f"Generated query executed successfully")
     except Exception as e:
-        print(f"Error executing query: {e}")
+        print(f"Error executing generated query: {e}")
+        continue
+
+    # Compare results with each expected query
+    expected_query_list = expected_queries[i]
+    match_found = False
+    for expected_query in expected_query_list:
+        try:
+            cursor.execute(expected_query)
+            expected_results = cursor.fetchall()
+
+            # Compare results (ignoring order)
+            if sorted(generated_results) == sorted(expected_results):
+                print(f"Results match for expected query: {expected_query}")
+                match_found = True
+                break
+        except Exception as e:
+            print(f"Error executing expected query: {e}")
+
+    if not match_found:
+        print(f"Generated query results do not match any expected query results")
 
 # Close the database connection
 connection.close()

@@ -21,7 +21,7 @@ EMBEDDING_TOP_K = 10
 DISTANCE_THRESHOLD = 1.3 
 
 # Cutoff for filtering results based on distance
-DISTANCE_CUTOFF = 0.52
+DISTANCE_CUTOFF = 0.55
 
 # Embedding model to use for vectorization
 EMBEDDING_MODEL = "nomic-embed-text:latest"

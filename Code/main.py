@@ -26,7 +26,7 @@ if __name__ == '__main__':
     
     # Script to run the application
     state = fn.State()
-    state["question"] = "How the table 'actor' is related to the table 'film'?"
+    state["question"] = "How many actors are in the database?"
     print("Question: ", state["question"])
     state["query"] = ""
     state["result"] = ""
