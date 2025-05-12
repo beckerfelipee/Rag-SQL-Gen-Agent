@@ -14,17 +14,29 @@ DB_PATH = "DB//sakila.db"
 # Path to the vector database (ChromaDB)
 VECTOR_DB_PATH = "Vector_DB/vectorized_db"
 
+# Embedding model to use for vectorization
+EMBEDDING_MODEL = "nomic-embed-text:latest"
+
 # Number of top results (tables) to retrieve from the vector database
 EMBEDDING_TOP_K = 10
 
 # Threshold for filtering results based on best distance
-DISTANCE_THRESHOLD = 1.3 
+DISTANCE_THRESHOLD = 0.3 # percentage
 
 # Cutoff for filtering results based on distance
-DISTANCE_CUTOFF = 0.52
+DISTANCE_CUTOFF = 0.55 # distance
 
-# Embedding model to use for vectorization
-EMBEDDING_MODEL = "nomic-embed-text:latest"
+# Reranking model to use for vectorization
+# RERANK_MODEL_PATH = "./ms-marco-MiniLM-L6-v2"
+
+# Rerank top K results
+# RERANK_TOP_K = 8
+
+# Rerank threshold
+# RERANK_THRESHOLD = 0.3 # percentage
+
+# Rerank cutoff
+# RERANK_CUTOFF = 1 # score
 
 # --- LLM model to use for natural language responses --- #
 
@@ -54,7 +66,7 @@ Only use the following tables:
 
 # 1. Carefully read the user's question and identify what information is being requested.
 # 2. Identify which tables and columns (from the provided schema) contain this information.
-# 3. Double-check to avoid using any column or table that does not exist in the schema ({table_info}).
+# 3. Double-check to avoid using any column or table that does not exist in the schema.
 # 4. Finally, return the query in the specified JSON format.
 
 Return your response as a JSON object with the following format:

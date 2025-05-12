@@ -24,6 +24,8 @@ db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
 # Initialize the model
 llm = ChatOllama(base_url=os.getenv("OLLAMA_SERVER"), model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
 
+# print("Temperature:", llm.temperature)
+
 # --- Functions --- #
 
 
@@ -113,5 +115,5 @@ if __name__ == '__main__':
             output = state["answer"]
 
             messages.chat_message("AI").write_stream(state["answer"])
-            info.empty() 
+            info.empty()
 

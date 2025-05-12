@@ -26,17 +26,18 @@ if __name__ == '__main__':
     
     # Script to run the application
     state = fn.State()
-    state["question"] = "How the table 'actor' is related to the table 'film'?"
+    state["question"] = "What are top 3 most rented movie categories?"
     print("Question: ", state["question"])
     state["query"] = ""
     state["result"] = ""
 
-    # 
+    # Get the context tables
     tables = fn.query_collection(prompt=state["question"])
     context = tables["documents"]
+
     state["tables_info"] = "\n---\n".join(context)
 
-    print("Context Tables: ", state["tables_info"])
+    # print("Context Tables: ", state["tables_info"])
 
     state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=state["tables_info"])['query']
     print("Query: ", state["query"])
