@@ -26,8 +26,10 @@ EMBEDDING_MODEL = "nomic-embed-text:latest"
 
 # LLM model to use for generating SQL queries and answers
 
+# Options: "llama3.2:3b", "gemma3:27b", "llama3.3:70b"
 LLM_MODEL = "llama3.2:3b"
 LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
+LLM_TOP_P = 0.7  # Top-p sampling for the LLM response
 
 # System message to generate SQL queries
 
@@ -46,10 +48,6 @@ pay attention to which column is in which table.
 Only use the following tables:
 {table_info}
 
-IMPORTANT: If your query could potentially return many rows your query 
-MUST limit the number of returned rows to a maximum of {max_results}, using
-the appropriate LIMIT, TOP, or equivalent clause for the {dialect} SQL dialect.
-
 Return your response as a JSON object with the following format:
 {{
   "query": "your SQL query here"
@@ -57,21 +55,24 @@ Return your response as a JSON object with the following format:
 """
 
 ANSWER_GEN_SYSTEM_MESSAGE = """
-Given the following user question, corresponding SQL query, and SQL result, answer the user
-question using the information from the SQL result.
-Present your answer in a simple, easy-to-understand, and objective manner.
-Do NOT suggest alternative queries or hypothetical solutions.
+Given the following user question and available information, provide a helpful answer. 
+If SQL query and results are available, use them to answer the question. 
+If not, use the provided table information to attempt to answer.
 
 Question: {question}
+Tables Info: {tables_info}
 SQL Query: {query}
 SQL Result: {result}
 
 Important instructions:
 - Your response must include all relevant information
-- If query or result is empty, inform the user that a query couldn't be generated or no results were found
-- Do not make assumptions beyond what is explicitly shown in the results
+- If both query and result are empty, attempt to answer using the tables info
+- If no sufficient information is available, inform the user that you cannot answer the question with the available data
+- Do not make assumptions beyond what is explicitly shown in the data
 - Format data in an easily readable way appropriate to the question (tables, lists, etc.)
 - Use natural language to explain the findings from the data
+- Present your answer in a simple, easy-to-understand, and objective manner
+- Do NOT suggest alternative queries or hypothetical solutions
 """
 
 

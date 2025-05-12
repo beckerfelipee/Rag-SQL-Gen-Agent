@@ -62,7 +62,7 @@ if __name__ == '__main__':
             info.status("Retrieving relevant tables...")
             tables = fn.query_collection(prompt=state["question"])
             context = tables["documents"]
-            context_tables = "\n---\n".join(context)
+            state["tables_info"] = "\n---\n".join(context)
             
             if tables['ids'] != []:
                 with col1.popover("📅 Retrieved Tables", use_container_width=100):
@@ -72,7 +72,7 @@ if __name__ == '__main__':
                 # Generate SQL query using the retrieved tables
 
                 info.status("Generating SQL query...")
-                state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=context_tables)['query']
+                state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=state["tables_info"])['query']
                 if state["query"] != "Error generating query":
                     with col2.popover("📝 Generated SQL Query", use_container_width=100):
                         st.write(state["query"])
@@ -89,11 +89,7 @@ if __name__ == '__main__':
                         st.write(f"Total Results: {total_count}")
                         st.write("Results: ", results)
 
-                    if len(results) > cfg.MAX_RESULTS_LLM:
-                        limited_results = results[:cfg.MAX_RESULTS_LLM]
-                        state["result"] = f"Showing only the first {cfg.MAX_RESULTS_LLM}:\n{str(limited_results)}"
-                    else:
-                        state["result"] = str(results)
+                    state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
                 
             # Generate answer using the SQL result
 

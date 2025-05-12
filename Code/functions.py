@@ -37,6 +37,7 @@ def db_extract(db) -> list[str]:
 def get_vector_collection() -> chromadb.Collection:
     """Retrieve or create a ChromaDB vector collection."""
     url = os.getenv("OLLAMA_LOCAL_SERVER") if cfg.RUN_LOCALLY else os.getenv("OLLAMA_SERVER")
+    # print(f"Connecting to OLLAMA server at {url}...")
     embedding_function = OllamaEmbeddingFunction(url=url, model_name=cfg.EMBEDDING_MODEL)
     chroma_client = chromadb.PersistentClient(path=cfg.VECTOR_DB_PATH) # chroma uses sqlite3 to store data
     return chroma_client.get_or_create_collection(name="rag-sql-app", embedding_function=embedding_function, metadata={"hnsw:space": "cosine"})
@@ -139,6 +140,15 @@ def create_view(query: str, db):
     return results, total_count
 
 
+# Reduce the number of rows in the result
+def reduce_rows(results: list, max_results: int = cfg.MAX_RESULTS_LLM) -> str:
+    if len(results) > max_results:
+        limited_results = results[:max_results]
+        return f"Showing only the first {max_results}:\n{str(limited_results)}"
+    else:
+        return str(results)
+
+
 # Answer generation
 
 class State(TypedDict):
@@ -146,10 +156,11 @@ class State(TypedDict):
     query: str
     result: str
     answer: str
+    tables_info: str
 
 def generate_answer(state: State, llm: ChatOllama):
     """Answer question using retrieved information as context."""
-    prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(question=state["question"],query=state["query"],result=state["result"])
+    prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(question=state["question"],tables_info=state["tables_info"],query=state["query"],result=state["result"])
     
     response = llm.stream(prompt)
 
