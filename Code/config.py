@@ -2,6 +2,10 @@
 
 RUN_LOCALLY = False  # Set to True if running the OLLAMA server locally
 
+# Extract database tables and their information
+
+REMOVE_EXAMPLES = True  # Set to True to remove examples from the table information
+
 # --- Vector Database and Embedding Configuration --- #
 
 # DB path for the SQLite database
@@ -17,7 +21,7 @@ EMBEDDING_TOP_K = 10
 DISTANCE_THRESHOLD = 1.3 
 
 # Cutoff for filtering results based on distance
-DISTANCE_CUTOFF = 0.5 
+DISTANCE_CUTOFF = 0.52
 
 # Embedding model to use for vectorization
 EMBEDDING_MODEL = "nomic-embed-text:latest"
@@ -28,8 +32,8 @@ EMBEDDING_MODEL = "nomic-embed-text:latest"
 
 # Options: "llama3.2:3b", "gemma3:27b", "llama3.3:70b"
 LLM_MODEL = "llama3.2:3b"
-LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
-LLM_TOP_P = 0.7  # Top-p sampling for the LLM response
+LLM_TEMPERATURE = 0.05  # Temperature for the LLM response
+LLM_TOP_P = 0.8  # Top-p sampling for the LLM response
 
 # System message to generate SQL queries
 
@@ -48,6 +52,11 @@ pay attention to which column is in which table.
 Only use the following tables:
 {table_info}
 
+# 1. Carefully read the user's question and identify what information is being requested.
+# 2. Identify which tables and columns (from the provided schema) contain this information.
+# 3. Double-check to avoid using any column or table that does not exist in the schema ({table_info}).
+# 4. Finally, return the query in the specified JSON format.
+
 Return your response as a JSON object with the following format:
 {{
   "query": "your SQL query here"
@@ -55,24 +64,29 @@ Return your response as a JSON object with the following format:
 """
 
 ANSWER_GEN_SYSTEM_MESSAGE = """
-Given the following user question and available information, provide a helpful answer. 
-If SQL query and results are available, use them to answer the question. 
-If not, use the provided table information to attempt to answer.
+You are a Capgemini AI tool specialized in databases. Respond strictly based on the provided context.
 
-Question: {question}
-Tables Info: {tables_info}
-SQL Query: {query}
-SQL Result: {result}
+Given the following user question and available information, provide a helpful answer only if it is related to databases.
+
+Context:
+- Question: {question}
+- Tables Info: {tables_info}
+- SQL Query: {query}
+- SQL Total Results: {total_count}
+- SQL Result: {result}
 
 Important instructions:
-- Your response must include all relevant information
-- If both query and result are empty, attempt to answer using the tables info
-- If no sufficient information is available, inform the user that you cannot answer the question with the available data
-- Do not make assumptions beyond what is explicitly shown in the data
-- Format data in an easily readable way appropriate to the question (tables, lists, etc.)
-- Use natural language to explain the findings from the data
-- Present your answer in a simple, easy-to-understand, and objective manner
-- Do NOT suggest alternative queries or hypothetical solutions
+- Only respond to questions that are clearly related to databases or the provided data context.
+- If SQL query and results are available, use them to answer the question.
+- If both query and result are empty, attempt to answer using the table information.
+- Only If the SQL result text explicitly contains the phrase 'only {max_result_llm} results shown', mention that your analysis is limited to this subset of data. Otherwise, do not mention any limitation. 
+- Make it clear that the user has access to the full result set by clicking on "Query Results".
+- If there is not enough information to answer, clearly state that.
+- Format data clearly using Markdown (tables, lists, etc.) when appropriate.
+- Explain findings in a simple, objective, and easy-to-understand way.
+- Do NOT suggest alternative queries or hypothetical solutions.
+- Always respond in the same language as the question ({question}).
+- Never answer questions that are unrelated to databases or the provided context.
 """
 
 

@@ -29,6 +29,7 @@ if __name__ == "__main__":
         "List all movies released after 2010.", #8
         "What are the top 3 actors from the top 3 most rented movie categories?" #9
         "How the table 'actor' is related to the table 'film'?" #10
+        "Qual a relação entre a tabela customer e a tabela rental?" #11
     ]
     
     result = query_collection(questions[2])

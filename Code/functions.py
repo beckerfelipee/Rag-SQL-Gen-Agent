@@ -30,6 +30,9 @@ def db_extract(db) -> list[str]:
     """Extracts the table names and their information from the database."""
     tables_info = db.get_table_info_no_throw()
     docs = tables_info.split("\n\n\n")
+    if cfg.REMOVE_EXAMPLES:
+        if cfg.REMOVE_EXAMPLES:
+            docs = [doc.split("\n\n")[0] for doc in docs]
     return docs
 
 # Vector collection management
@@ -134,10 +137,16 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, max_results
 def create_view(query: str, db):
     '''Uses and SQL query to retrieve a table from the DB and calls an llm to generate a 
     text answer to the user input based on that table'''
-    temp_table =  db.run(query)
-    results = ast.literal_eval(temp_table)
+    temp_table =  db.run_no_throw(query, include_columns=True)
+    try:
+        results = ast.literal_eval(temp_table)
+    except Exception as e:
+        results = temp_table
     total_count = len(results)
+    # print(type(results))
+    # print(results)
     return results, total_count
+
 
 
 # Reduce the number of rows in the result
@@ -155,12 +164,20 @@ class State(TypedDict):
     question: str
     query: str
     result: str
+    total_count: int
     answer: str
     tables_info: str
 
 def generate_answer(state: State, llm: ChatOllama):
     """Answer question using retrieved information as context."""
-    prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(question=state["question"],tables_info=state["tables_info"],query=state["query"],result=state["result"])
+    prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(
+        question=state["question"],
+        tables_info=state["tables_info"],
+        query=state["query"],
+        total_count=state["total_count"],
+        result=state["result"],
+        max_result_llm=cfg.MAX_RESULTS_LLM
+        )
     
     response = llm.stream(prompt)
 

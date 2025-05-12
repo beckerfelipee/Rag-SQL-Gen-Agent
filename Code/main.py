@@ -50,7 +50,8 @@ if __name__ == '__main__':
     else:
         state["result"] = "Empty"
 
-    print("Total Results: ", total_count)
+    state["total_count"] = total_count
+    print("Total Results: ", state["total_count"])
     print("Result: ", state["result"])
 
     state["answer"] = fn.generate_answer(state=state, llm=llm)

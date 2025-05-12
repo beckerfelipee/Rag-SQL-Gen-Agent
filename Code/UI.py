@@ -1,11 +1,13 @@
 import os
 import atexit
+import pandas as pd
 from langchain_community.utilities import SQLDatabase
 from langchain_community.chat_models import ChatOllama
 from local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
 from dotenv import load_dotenv
 import config as cfg
 import functions as fn
+
 
 # UI imports
 import streamlit as st
@@ -56,6 +58,7 @@ if __name__ == '__main__':
             state["question"] = prompt
             state["query"] = ""
             state["result"] = ""
+            state["total_count"] = 0
 
             # Retrieve relevant tables from the vector database
             
@@ -85,13 +88,25 @@ if __name__ == '__main__':
                 else:
                     results, total_count = fn.create_view(query=state["query"], db=db)
 
-                    with col3.popover("📊 Query Results", use_container_width=100):
-                        st.write(f"Total Results: {total_count}")
-                        st.write("Results: ", results)
+                    if type(results) == list:
+                        with col3.popover("📊 Query Results", use_container_width=100):
+                            # Create a download button for the results
+                            df = pd.DataFrame(results)
+                            csv = df.to_csv().encode("utf-8")
+                            st.download_button(
+                                label="Download CSV",
+                                data=csv,
+                                on_click='ignore',
+                                file_name=f"{state['query']}.csv"
+                            )
+                            # Display the results in a table
+                            st.write(f"Total Results: {total_count}")
+                            st.write("Results: ", results)
 
-                    state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
-                
-            # Generate answer using the SQL result
+                        state["total_count"] = total_count
+                        state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
+                    else:
+                        state["result"] = results # Error message from DB
 
             info.status("Generating answer...")
             state["answer"] = fn.generate_answer(state=state, llm=llm)
