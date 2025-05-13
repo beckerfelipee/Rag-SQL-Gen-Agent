@@ -22,7 +22,10 @@ load_dotenv()
 db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
 
 # Initialize the model
-llm = ChatOllama(base_url=os.getenv("OLLAMA_SERVER"), model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
+base_url = os.getenv("OLLAMA_LOCAL_SERVER") if cfg.RUN_LOCALLY else os.getenv("OLLAMA_SERVER")
+
+sql_llm = ChatOllama(base_url=base_url, model=cfg.SQL_LLM_MODEL, temperature=cfg.SQL_LLM_TEMPERATURE, top_p=cfg.SQL_LLM_TOP_P)
+answer_llm = ChatOllama(base_url=base_url, model=cfg.ANSWER_LLM_MODEL, temperature=cfg.ANSWER_LLM_TEMPERATURE, top_p=cfg.ANSWER_LLM_TOP_P)
 
 # print("Temperature:", llm.temperature)
 
@@ -77,7 +80,7 @@ if __name__ == '__main__':
                 # Generate SQL query using the retrieved tables
 
                 info.status("Generating SQL query...")
-                state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=state["tables_info"])['query']
+                state["query"] = fn.write_query(question=state["question"], llm=sql_llm, context_tables=state["tables_info"])['query']
                 if state["query"] != "Error generating query":
                     with col2.popover("📝 Generated SQL Query", use_container_width=100):
                         st.write(state["query"])
@@ -111,7 +114,7 @@ if __name__ == '__main__':
                         state["result"] = results # Error message from DB
 
             info.status("Generating answer...")
-            state["answer"] = fn.generate_answer(state=state, llm=llm)
+            state["answer"] = fn.generate_answer(state=state, llm=answer_llm)
             output = state["answer"]
 
             messages.chat_message("AI").write_stream(state["answer"])

@@ -109,7 +109,7 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect:
     prompt = query_prompt_template.invoke(
         {
             "dialect": db_dialect,
-            "table_info": context_tables,
+            "tables_info": context_tables,
             "input": question
         }
     )
@@ -176,11 +176,10 @@ def generate_answer(state: State, llm: ChatOllama):
     prompt = cfg.ANSWER_GEN_SYSTEM_MESSAGE.format(
         question=state["question"],
         tables_info=state["tables_info"],
-        query=state["query"],
-        total_count=state["total_count"],
-        result=state["result"],
-        max_result_llm=cfg.MAX_RESULTS_LLM
-        )
+        sql_query=state["query"],
+        result_row_count=state["total_count"],
+        result_data=state["result"]
+    )
     
     response = llm.stream(prompt)
 

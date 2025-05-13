@@ -41,17 +41,20 @@ DISTANCE_CUTOFF = 0.55 # distance
 # --- LLM model to use for natural language responses --- #
 
 # LLM model to use for generating SQL queries and answers
+SQL_LLM_MODEL = "gemma3:27b"  # Model for SQL query generation
+SQL_LLM_TEMPERATURE = 0.2  # Temperature for the SQL query generation
+SQL_LLM_TOP_P = 0.9  # Top-p sampling for the SQL query generation
 
 # Options: "llama3.2:3b", "gemma3:27b", "llama3.3:70b"
-LLM_MODEL = "llama3.2:3b"
-LLM_TEMPERATURE = 0.05  # Temperature for the LLM response
-LLM_TOP_P = 0.8  # Top-p sampling for the LLM response
+ANSWER_LLM_MODEL = "llama3.2:3b"
+ANSWER_LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
+ANSWER_LLM_TOP_P = 0.9  # Top-p sampling for the LLM response
 
 # System message to generate SQL queries
 
 DB_DIALECT_BASE = "sqlite"  # Base dialect for the database
 MAX_RESULTS_QUERY = 3000  # Maximum number of results to return in the SQL query
-MAX_RESULTS_LLM = 30  # Maximum number of results to return in the LLM response
+MAX_RESULTS_LLM = 20  # Maximum number of results to return in the LLM response
 
 SQL_GEN_SYSTEM_MESSAGE = """
 Given an input question, create a syntactically correct {dialect} query to
@@ -62,7 +65,7 @@ description. Be careful to not query for columns that do not exist. Also,
 pay attention to which column is in which table.
 
 Only use the following tables:
-{table_info}
+{tables_info}
 
 # 1. Carefully read the user's question and identify what information is being requested.
 # 2. Identify which tables and columns (from the provided schema) contain this information.
@@ -82,23 +85,25 @@ Given the following user question and available information, provide a helpful a
 
 Context:
 - Question: {question}
+
 - Tables Info: {tables_info}
-- SQL Query: {query}
-- SQL Total Results: {total_count}
-- SQL Result: {result}
+
+- SQL Query: {sql_query}
+
+- Result to ANSWER: {result_data}
+
+- (metadata) Number of rows (full result set): {result_row_count}
 
 Important instructions:
 - Only respond to questions that are clearly related to databases or the provided data context.
-- If SQL query and results are available, use them to answer the question.
-- If both query and result are empty, attempt to answer using the table information.
-- Only If the SQL result text explicitly contains the phrase 'only {max_result_llm} results shown', mention that your analysis is limited to this subset of data. Otherwise, do not mention any limitation. 
+- If SQL query and result to answer are available, display them to answer the question.
+- If both SQL query and result are empty, attempt to answer using the tables Info.
 - Make it clear that the user has access to the full result set by clicking on "Query Results".
-- If there is not enough information to answer, clearly state that.
 - Format data clearly using Markdown (tables, lists, etc.) when appropriate.
 - Explain findings in a simple, objective, and easy-to-understand way.
 - Do NOT suggest alternative queries or hypothetical solutions.
 - Always respond in the same language as the question ({question}).
 - Never answer questions that are unrelated to databases or the provided context.
 """
-
+# - If there is not enough information to answer, clearly state that.
 
