@@ -12,7 +12,6 @@ import functions as fn
 # UI imports
 import streamlit as st
 
-
 # --- Constants --- #
 
 # Load environment variables from .env file

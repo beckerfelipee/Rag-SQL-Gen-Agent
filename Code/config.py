@@ -2,10 +2,6 @@
 
 RUN_LOCALLY = False  # Set to True if running the OLLAMA server locally
 
-# Extract database tables and their information
-
-REMOVE_EXAMPLES = True  # Set to True to remove examples from the table information
-
 # --- Vector Database and Embedding Configuration --- #
 
 # DB path for the SQLite database
@@ -13,6 +9,9 @@ DB_PATH = "DB//sakila.db"
 
 # Path to the vector database (ChromaDB)
 VECTOR_DB_PATH = "Vector_DB/vectorized_db"
+
+# Extract database tables and their information
+REMOVE_EXAMPLES = True  # Set to True to remove examples from the table information
 
 # Embedding model to use for vectorization
 EMBEDDING_MODEL = "nomic-embed-text:latest"

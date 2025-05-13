@@ -186,5 +186,5 @@ def generate_answer(state: State, llm: ChatOllama):
     for chunk in response:
         yield chunk.content
 
-
     # return {"answer": response.content}
+    
