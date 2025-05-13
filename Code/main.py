@@ -31,12 +31,13 @@ if __name__ == '__main__':
     state["query"] = ""
     state["result"] = ""
 
-    # 
+    # Get the context tables
     tables = fn.query_collection(prompt=state["question"])
     context = tables["documents"]
+
     state["tables_info"] = "\n---\n".join(context)
 
-    print("Context Tables: ", state["tables_info"])
+    # print("Context Tables: ", state["tables_info"])
 
     state["query"] = fn.write_query(question=state["question"], llm=llm, context_tables=state["tables_info"])['query']
     print("Query: ", state["query"])

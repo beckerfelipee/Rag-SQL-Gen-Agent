@@ -63,7 +63,7 @@ def add_to_vector_collection(all_splits) -> bool:
     return True
 
 
-def query_collection(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K):
+def query_collection(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K) -> dict:
     """Query the vector database based on a user prompt."""
     collection = get_vector_collection()
     print("Querying the collection...")
@@ -74,7 +74,7 @@ def query_collection(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K):
         # print(distances)
 
         best_distance = min(distances)
-        threshold = best_distance * cfg.DISTANCE_THRESHOLD
+        threshold = best_distance * (1 + cfg.DISTANCE_THRESHOLD)
         
         # Criar uma máscara de índices que atendem ao critério
         filtered_indices = [i for i, distance in enumerate(distances) if distance <= threshold and distance <= cfg.DISTANCE_CUTOFF]
@@ -88,6 +88,7 @@ def query_collection(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K):
     else:
         return None
     
+    
 # LLM test
 
 def test_model(llm: ChatOllama) -> None:    
@@ -96,7 +97,7 @@ def test_model(llm: ChatOllama) -> None:
 
 # Write SQL query
 
-def write_query(question: str, llm: ChatOllama, context_tables: str, max_results: int = cfg.MAX_RESULTS_QUERY, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
+def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
     """Generate SQL query to fetch information."""
 
     user_prompt = "Question: {input}"
@@ -109,10 +110,11 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, max_results
         {
             "dialect": db_dialect,
             "table_info": context_tables,
-            "input": question,
-            "max_results": max_results,
+            "input": question
         }
     )
+
+    print(f"Prompt: {prompt}")
 
     # Get the response from the LLM
     response = llm.invoke(prompt)
@@ -121,15 +123,17 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, max_results
     try:
         # Extract the JSON part from the response
         content = response.content
-        # Find JSON in the response (in case there's additional text)
+        # Find the first JSON in the response (in case there's more than one)
         json_start = content.find('{')
-        json_end = content.rfind('}') + 1
+        json_end = content.find('}', json_start) + 1
         json_str = content[json_start:json_end]
         result = json.loads(json_str)
+        print(f"Raw response: {response.content}")
+        print(result)
         return {"query": result["query"]}
     except Exception as e:
-        #print(f"Error parsing JSON: {e}")
-        #print(f"Raw response: {response.content}")
+        print(f"Error parsing JSON: {e}")
+        print(f"Raw response: {response.content}")
         return {"query": "Error generating query"}
     
 
@@ -146,7 +150,6 @@ def create_view(query: str, db):
     # print(type(results))
     # print(results)
     return results, total_count
-
 
 
 # Reduce the number of rows in the result
