@@ -24,7 +24,7 @@ EMBEDDING_TOP_K = 10
 DISTANCE_THRESHOLD = 0.3 # percentage
 
 # Cutoff for filtering results based on distance
-DISTANCE_CUTOFF = 0.55 # distance
+DISTANCE_CUTOFF = 0.55
 
 # Reranking model to use for vectorization
 # RERANK_MODEL_PATH = "./ms-marco-MiniLM-L6-v2"
