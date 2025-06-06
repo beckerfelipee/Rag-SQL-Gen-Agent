@@ -49,6 +49,6 @@ Ask questions about the database and get answers in natural language.
 This project is licensed under the MIT License.
 
 ### Colaborators
-- [André Roque](https://github.com/Roque97)
 - [Felipe Becker](https://github.com/beckerfelipee)
+- [André Roque](https://github.com/Roque97)
 - [Guilherme Marques](https://github.com/guilhermusm)
