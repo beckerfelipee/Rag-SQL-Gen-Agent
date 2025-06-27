@@ -40,7 +40,8 @@ DISTANCE_CUTOFF = 0.55
 # --- LLM model to use for natural language responses --- #
 
 # LLM model to use for generating SQL queries and answers
-SQL_LLM_MODEL = "gemma3:27b"  # Model for SQL query generation
+# SQL_LLM_MODEL = "gemma3:27b"
+SQL_LLM_MODEL = "llama3.2:3b"  # Model for SQL query generation
 SQL_LLM_TEMPERATURE = 0.2  # Temperature for the SQL query generation
 SQL_LLM_TOP_P = 0.9  # Top-p sampling for the SQL query generation
 

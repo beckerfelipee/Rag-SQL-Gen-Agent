@@ -187,4 +187,26 @@ def generate_answer(state: State, llm: ChatOllama):
         yield chunk.content
 
     # return {"answer": response.content}
+
+
+if __name__ == "__main__":
+    # Example usage
+    load_dotenv()
+    db = None  # Replace with actual database connection
+    llm = ChatOllama(model=cfg.SQL_LLM_MODEL, temperature=cfg.SQL_LLM_TEMPERATURE, top_p=cfg.SQL_LLM_TOP_P)
+    
+    question = "What are the entries in the mock table?"
+    context_tables = "mock_table_info"
+    
+    query_result = write_query(question, llm, context_tables)
+    print(query_result)
+    
+    results, total_count = create_view(query_result["query"], db)
+    print(results, total_count)
+    
+    state = State(question=question, query=query_result["query"], result=str(results), total_count=total_count, answer="", tables_info=context_tables)
+    answer = generate_answer(state, llm)
+    
+    for chunk in answer:
+        print(chunk)  # Stream the answer
     

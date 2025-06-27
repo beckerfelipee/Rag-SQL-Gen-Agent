@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     # Initialize the model
     base_url = os.getenv("OLLAMA_LOCAL_SERVER") if cfg.RUN_LOCALLY else os.getenv("OLLAMA_SERVER")
-    llm = ChatOllama(base_url=base_url, model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE, top_p=cfg.LLM_TOP_P)
+    llm = ChatOllama(base_url=base_url, model=cfg.SQL_LLM_MODEL, temperature=cfg.SQL_LLM_TEMPERATURE, top_p=cfg.SQL_LLM_TOP_P)
     
     # Script to run the application
     state = fn.State()
@@ -33,6 +33,16 @@ if __name__ == '__main__':
 
     # Get the context tables
     tables = fn.query_collection(prompt=state["question"])
+
+    if not tables:
+        # Extract table info from your database
+        all_splits = fn.db_extract(db)
+        # Add to vector DB
+        fn.add_to_vector_collection(all_splits)
+        tables = fn.query_collection(prompt=state["question"])
+
+
+
     context = tables["documents"]
 
     state["tables_info"] = "\n---\n".join(context)
