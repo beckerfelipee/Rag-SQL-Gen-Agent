@@ -50,6 +50,29 @@ ANSWER_LLM_MODEL = "llama3.2:3b"
 ANSWER_LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
 ANSWER_LLM_TOP_P = 0.9  # Top-p sampling for the LLM response
 
+
+
+# --- Azure OpenAI Configuration --- #
+
+
+MODEL_AZURE = 'gpt-4.1'
+MODEL_EMBEDDINGS_AZURE = ''
+API_VERSION_AZURE = "2023-07-01-preview"
+API_TYPE_AZURE = 'gpt-4.1'
+
+# SQL_LLM_MODEL = 'gpt-4.1'
+SQL_LLM_MODEL_AZURE = 'gpt-4.1'  # Model for SQL query generation
+SQL_LLM_TEMPERATURE_AZURE = 0.2  # Temperature for the SQL query generation
+SQL_LLM_TOP_P_AZURE = 0.9  # Top-p sampling for the SQL query generation
+
+# Options: "gpt-4.1"
+ANSWER_LLM_MODEL_AZURE = 'gpt-4.1'
+ANSWER_LLM_TEMPERATURE_AZURE = 0.1  # Temperature for the LLM response
+ANSWER_LLM_TOP_P_AZURE = 0.9  # Top-p sampling for the LLM response
+
+
+
+
 # System message to generate SQL queries
 
 DB_DIALECT_BASE = "sqlite"  # Base dialect for the database
@@ -104,6 +127,7 @@ Important instructions:
 - Do NOT suggest alternative queries or hypothetical solutions.
 - Always respond in the same language as the question ({question}).
 - Never answer questions that are unrelated to databases or the provided context.
+- Provide your answers in english, or the language of the question if specified.
 """
 # - If there is not enough information to answer, clearly state that.
 
