@@ -21,8 +21,8 @@ RAG SQL Agent is a Retrieval-Augmented Generation (RAG) application designed to 
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repo/rag-sql-agent.git
-   cd rag-sql-agent
+   git clone https://github.com/beckerfelipee/Rag-SQL-Gen-Agent.git
+   cd Rag-SQL-Gen-Agent
    ```
 
 2. Install dependencies:
