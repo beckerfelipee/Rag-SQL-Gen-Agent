@@ -120,6 +120,8 @@ def question_and_answer_azure(question, database ) -> State:
     tables = fn.query_collection(prompt=state["question"])
 
     context = tables["documents"]
+
+    state["tables"] = tables
     state["query"] = write_query_azure(
         question=state["question"],
         client=client,
@@ -128,9 +130,10 @@ def question_and_answer_azure(question, database ) -> State:
     state["tables_info"] = "\n---\n".join(context)
 
     if state["query"] != "Error generating query":
-        results, total_count = fn.create_view(query=state["query"], db=db)
+        results, total_count = fn.create_view(query=state["query"], db=database)
         # print("Results: ", results) # All results of the query
-        state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
+        print(state["result"])
+        state["result"] = results
     else:
         state["result"] = "Empty"
 
@@ -144,6 +147,8 @@ def question_and_answer_azure(question, database ) -> State:
         print(chunk, end="", flush=True)
 
     print(state["answer"])
+    print("Total Results: ", state["total_count"])
+    print("Result: ", state["result"])
 
     return state
 
@@ -155,7 +160,9 @@ if __name__ == "__main__":
     # Example usage
 
     db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
-    question_and_answer_azure(question = 'How many actors in db', database = db) 
+    question_and_answer_azure(question = 'How many actors in db', database = db)
+
+
 
 
 

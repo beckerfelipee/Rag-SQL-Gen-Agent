@@ -7,6 +7,7 @@ from local_ollama_management import start_ollama, is_ollama_running, terminate_o
 from dotenv import load_dotenv
 import config as cfg
 import functions as fn
+import azure_functions as azf
 
 
 # UI imports
@@ -42,8 +43,11 @@ if __name__ == '__main__':
 
     st.set_page_config(page_title="RAG SQL App", page_icon="🤖", layout="wide")
     st.title("🤖 RAG SQL App Interface")
+    llm_provider = st.radio(
+    "Choose LLM Provider:",
+    ("Ollama (Local)", "Azure OpenAI"),
+    index=0)
     st.write("You can ask questions about the database and get answers in natural language.")
-
     #st.header("🔍 Question Answering")
 
     # Criar colunas para os popovers
@@ -58,43 +62,36 @@ if __name__ == '__main__':
             
             info.info("Processing your question...")
 
-            state = fn.State()
-            state["question"] = prompt
-            state["query"] = ""
-            state["result"] = ""
-            state["total_count"] = 0
+            if llm_provider == "Ollama (Local)":
+                state = fn.State()
+                state["question"] = prompt
+                state["query"] = ""
+                state["result"] = ""
+                state["total_count"] = 0
 
-            # Retrieve relevant tables from the vector database
-            
-            info.status("Retrieving relevant tables...")
-            tables = fn.query_collection(prompt=state["question"])
-            context = tables["documents"]
-            state["tables_info"] = "\n---\n".join(context)
-            
-            if tables['ids'] != []:
-                with col1.popover("📅 Retrieved Tables", use_container_width=100):
-                    for i in range(len(tables["ids"])):  # Itera sobre o comprimento de 'ids'
-                        st.write(f"\n-----------\nID: {tables['ids'][i]}, Distance: {tables['distances'][i]}, \n\nDocument: \n{tables['documents'][i]}\n")
-            
-                # Generate SQL query using the retrieved tables
+                info.status("Retrieving relevant tables...")
+                tables = fn.query_collection(prompt=state["question"])
+                context = tables["documents"]
+                state["tables_info"] = "\n---\n".join(context)
+
+                if tables['ids'] != []:
+                    with col1.popover("📅 Retrieved Tables", use_container_width=100):
+                        for i in range(len(tables["ids"])):
+                            st.write(f"\n-----------\nID: {tables['ids'][i]}, Distance: {tables['distances'][i]}, \n\nDocument: \n{tables['documents'][i]}\n")
 
                 info.status("Generating SQL query...")
                 state["query"] = fn.write_query(question=state["question"], llm=sql_llm, context_tables=state["tables_info"])['query']
                 if state["query"] != "Error generating query":
                     with col2.popover("📝 Generated SQL Query", use_container_width=100):
                         st.write(state["query"])
-                
-                # Execute the SQL query and retrieve results
-                
+
                 info.status("Executing SQL query...")
                 if state["query"] == "Error generating query":
                     state["result"] = "Empty"
                 else:
                     results, total_count = fn.create_view(query=state["query"], db=db)
-
                     if type(results) == list:
                         with col3.popover("📊 Query Results", use_container_width=100):
-                            # Create a download button for the results
                             df = pd.DataFrame(results)
                             csv = df.to_csv().encode("utf-8")
                             st.download_button(
@@ -103,19 +100,41 @@ if __name__ == '__main__':
                                 on_click='ignore',
                                 file_name=f"{state['query']}.csv"
                             )
-                            # Display the results in a table
                             st.write(f"Total Results: {total_count}")
                             st.write("Results: ", results)
-
                         state["total_count"] = total_count
                         state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
                     else:
-                        state["result"] = results # Error message from DB
+                        state["result"] = results
 
-            info.status("Generating answer...")
-            state["answer"] = fn.generate_answer(state=state, llm=answer_llm)
-            output = state["answer"]
-
-            messages.chat_message("AI").write_stream(state["answer"])
-            info.empty()
+                info.status("Generating answer...")
+                state["answer"] = fn.generate_answer(state=state, llm=answer_llm)
+                output = state["answer"]
+                messages.chat_message("AI").write_stream(state["answer"])
+                info.empty()
+            elif llm_provider == "Azure OpenAI":
+                state = azf.question_and_answer_azure(question=prompt, database=db)
+                # Show the same popovers as Ollama, if the keys exist in state
+                if 'tables' in state and state['tables'] and 'ids' in state['tables'] and state['tables']['ids']:
+                    with col1.popover("📅 Retrieved Tables", use_container_width=100):
+                        for i in range(len(state['tables']['ids'])):
+                            st.write(f"\n-----------\nID: {state['tables']['ids'][i]}, Distance: {state['tables']['distances'][i]}, \n\nDocument: \n{state['tables']['documents'][i]}\n")
+                if 'query' in state and state['query']:
+                    with col2.popover("📝 Generated SQL Query", use_container_width=100):
+                        st.write(state['query'])
+                if 'result' in state and isinstance(state['result'], list):
+                    with col3.popover("📊 Query Results", use_container_width=100):
+                        df = pd.DataFrame(state['result'])
+                        csv = df.to_csv().encode("utf-8")
+                        st.download_button(
+                            label="Download CSV",
+                            data=csv,
+                            on_click='ignore',
+                            file_name=f"{state['query']}.csv"
+                        )
+                        st.write(f"Total Results: {state.get('total_count', 0)}")
+                        st.write("Results: ", state['result'])
+                # Always show the answer
+                messages.chat_message("AI").write(state["answer"])
+                info.empty()
 
