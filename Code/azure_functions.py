@@ -58,8 +58,8 @@ def write_query_azure(question: str, client: AzureOpenAI, context_tables: str, d
                 {"role": "system", "content": system_message},
                 {"role": "user", "content": user_prompt}
             ],
-            temperature=0.2,
-            max_tokens=512
+            temperature= cfg.SQL_LLM_TEMPERATURE_AZURE,
+            max_tokens=cfg.SQL_LLM_MAX_TOKENS_AZURE,
         )
         content = response.choices[0].message.content
 
@@ -103,8 +103,8 @@ def generate_answer_azure(state: State, client: AzureOpenAI) -> str:
             {"role": "system", "content": cfg.ANSWER_GEN_SYSTEM_MESSAGE},
             {"role": "user", "content": prompt}
         ],
-        temperature=0.2,
-        max_tokens=512
+        temperature=cfg.ANSWER_LLM_TEMPERATURE_AZURE,
+        max_tokens=cfg.ANSWER_LLM_MAX_TOKENS_AZURE,
     )
     return response.choices[0].message.content
 
@@ -151,9 +151,6 @@ def question_and_answer_azure(question, database ) -> State:
     print("Result: ", state["result"])
 
     return state
-
-
-
 
 
 if __name__ == "__main__":
