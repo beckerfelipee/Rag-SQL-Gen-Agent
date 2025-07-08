@@ -82,8 +82,13 @@ MAX_RESULTS_LLM = 20  # Maximum number of results to return in the LLM response
 
 SQL_GEN_SYSTEM_MESSAGE = """
 Given an input question, create a syntactically correct {dialect} query to
-run to help find the answer. Only query for the few relevant columns given the question.
+run to help find the answer. 
 
+Only SELECT queries are allowed. If the answer to the question
+requires non-SELECT queries, specify that your purpose is only to provide information (DQL) 
+and not to modify the database or perform any actions (DML, DDL, etc.).
+
+Only query for the few relevant columns given the question.
 Pay attention to use only the column names that you can see in the schema
 description. Be careful to not query for columns that do not exist. Also,
 pay attention to which column is in which table.
@@ -129,6 +134,7 @@ Important instructions:
 - Always respond in the same language as the question ({question}).
 - Never answer questions that are unrelated to databases or the provided context.
 - Provide your answers in english, or the language of the question if specified.
+- Never produce SQL queries that modify the database (DML, DDL, etc.). Only SELECT queries are allowed.
 """
 # - If there is not enough information to answer, clearly state that.
 
