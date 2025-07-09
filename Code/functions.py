@@ -9,6 +9,7 @@ from chromadb.utils.embedding_functions.ollama_embedding_function import OllamaE
 # generate SQL queries
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.chat_models import ChatOllama
+from langchain_community.utilities import SQLDatabase
 import json
 
 # Execute SQL queries
@@ -138,12 +139,15 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect:
     
 
 # Execute SQL query (Create view)
-def create_view(query: str, db):
+def create_view(query: str, db: SQLDatabase) -> tuple[list, int]:
     '''Uses and SQL query to retrieve a table from the DB and calls an llm to generate a 
     text answer to the user input based on that table'''
-    temp_table =  db.run_no_throw(query, include_columns=True)
     try:
-        results = ast.literal_eval(temp_table)
+        if not query.strip().lower().startswith("select"):
+            temp_table =  db.run_no_throw(query, include_columns=True)
+            results = ast.literal_eval(temp_table)
+        else:
+            results = temp_table
     except Exception as e:
         results = temp_table
     total_count = len(results)
@@ -154,6 +158,7 @@ def create_view(query: str, db):
 
 # Reduce the number of rows in the result
 def reduce_rows(results: list, max_results: int = cfg.MAX_RESULTS_LLM) -> str:
+    """Reduce the number of rows in the result to a maximum number."""
     if len(results) > max_results:
         limited_results = results[:max_results]
         return f"Showing only the first {max_results}:\n{str(limited_results)}"
