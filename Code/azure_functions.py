@@ -191,6 +191,11 @@ def question_and_answer_azure(question, database ) -> State:
     )["query"]
     state["tables_info"] = "\n---\n".join(context)
 
+    if DEBUG:
+        print("Context Tables: ", state["tables_info"])
+        print("Generated Query: ", state["query"])
+        print("Query: ", state["query"])
+
     if state["query"] != "Error generating query":
         results, total_count = fn.create_view(query=state["query"], db=database)
         # print("Results: ", results) # All results of the query

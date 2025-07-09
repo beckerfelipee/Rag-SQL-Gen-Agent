@@ -140,16 +140,18 @@ def write_query(question: str, llm: ChatOllama, context_tables: str, db_dialect:
 
 # Execute SQL query (Create view)
 def create_view(query: str, db: SQLDatabase) -> tuple[list, int]:
-    '''Uses and SQL query to retrieve a table from the DB and calls an llm to generate a 
-    text answer to the user input based on that table'''
+    ''' Execute the SQL query and return the results as a list.
+    If the query is not a SELECT query, it will return the results as astring.'''
     try:
-        if not query.strip().lower().startswith("select"):
+        print(query.strip().lower().startswith("select"))
+        if query.strip().lower().startswith("select"):
             temp_table =  db.run_no_throw(query, include_columns=True)
             results = ast.literal_eval(temp_table)
         else:
-            results = temp_table
+            raise ValueError("Warning: The LLM did not generate a SELECT query.")
     except Exception as e:
-        results = temp_table
+        print(f"Error executing query: {e}")
+        return ['The query was not sucessfully executed.'], 0
     total_count = len(results)
     # print(type(results))
     # print(results)
