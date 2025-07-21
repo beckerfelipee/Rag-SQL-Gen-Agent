@@ -56,8 +56,8 @@ ANSWER_LLM_TOP_P = 0.9  # Top-p sampling for the LLM response
 
 
 MODEL_AZURE = 'gpt-4.1'
-MODEL_EMBEDDINGS_AZURE = 'text-embedding-3-small'
-DEPLOYMENT_ID_EMBEDDINGS_AZURE = 'text-embedding-3-small'  # Deployment ID for the embeddings model
+MODEL_EMBEDDINGS_AZURE = 'text-embedding-ada-002'
+DEPLOYMENT_ID_EMBEDDINGS_AZURE = 'text-embedding-ada-002'  # Deployment ID for the embeddings model
 API_VERSION_AZURE = "2023-07-01-preview"
 API_TYPE_AZURE = 'gpt-4.1'
 
