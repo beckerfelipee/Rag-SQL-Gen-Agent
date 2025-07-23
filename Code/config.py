@@ -62,13 +62,13 @@ API_VERSION_AZURE = "2023-07-01-preview"
 API_TYPE_AZURE = 'gpt-4.1'
 
 # SQL_LLM_MODEL = 'gpt-4.1'
-SQL_LLM_MODEL_AZURE = 'gpt-4.1'  # Model for SQL query generation
+SQL_LLM_MODEL_AZURE = 'gpt-35-turbo'  # Model for SQL query generation
 SQL_LLM_TEMPERATURE_AZURE = 0.1  # Temperature for the SQL query generation
 SQL_LLM_TOP_P_AZURE = 0.8  # Top-p sampling for the SQL query generation
 SQL_LLM_MAX_TOKENS_AZURE = 1024 # Maximum tokens for the SQL query generation
 
 # Options: "gpt-4.1"
-ANSWER_LLM_MODEL_AZURE = 'gpt-4.1'
+ANSWER_LLM_MODEL_AZURE = 'gpt-35-turbo'
 ANSWER_LLM_TEMPERATURE_AZURE = 0.1  # Temperature for the LLM response
 ANSWER_LLM_TOP_P_AZURE = 0.9  # Top-p sampling for the LLM response
 ANSWER_LLM_MAX_TOKENS_AZURE = 1024  # Maximum tokens for the LLM response

@@ -19,7 +19,7 @@ import time
 
 load_dotenv()
 
-DEBUG = True
+DEBUG = False
 
 client = AzureOpenAI(
     api_key=os.getenv("API_KEY_AZURE"),
