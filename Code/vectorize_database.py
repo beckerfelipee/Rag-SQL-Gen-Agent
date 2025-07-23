@@ -1,9 +1,9 @@
 import atexit
-import functions as fn
+from Code import functions as fn
 
 # Ollama server management
-from local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
-from config import RUN_LOCALLY, DB_PATH
+from Code.local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
+from Code.config import RUN_LOCALLY, DB_PATH
 from langchain_community.utilities import SQLDatabase 
 
 # --- Script --- #

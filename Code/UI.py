@@ -3,11 +3,11 @@ import atexit
 import pandas as pd
 from langchain_community.utilities import SQLDatabase
 from langchain_community.chat_models import ChatOllama
-from local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
+from Code.local_ollama_management import start_ollama, is_ollama_running, terminate_ollama_processes
 from dotenv import load_dotenv
-import config as cfg
-import functions as fn
-import azure_functions as azf
+from Code import config as cfg
+from Code import functions as fn
+from Code import azure_functions as azf
 
 
 # UI imports

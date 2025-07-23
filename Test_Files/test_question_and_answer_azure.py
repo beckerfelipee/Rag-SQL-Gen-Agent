@@ -57,11 +57,6 @@ class MockAzureDatabase:
             return "[{'result': 'mock_data'}]"
 
 
-@pytest.fixture
-def mock_azure_db():
-    """Fixture providing a mock Azure database."""
-    return MockAzureDatabase()
-
 
 @pytest.fixture
 def mock_azure_client():
@@ -127,19 +122,6 @@ def mock_azure_client():
     
     client.chat.completions.create = mock_chat_completion
     return client
-
-
-@pytest.fixture
-def mock_vector_results():
-    """Mock vector database results."""
-    return {
-        "ids": ["1", "2"],
-        "documents": [
-            "Table: actor\nColumns: actor_id, first_name, last_name, last_update",
-            "Table: customer\nColumns: customer_id, store_id, first_name, last_name, email"
-        ],
-        "distances": [0.1, 0.2]
-    }
 
 
 class TestQuestionAndAnswerAzure:

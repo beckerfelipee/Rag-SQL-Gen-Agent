@@ -8,8 +8,8 @@ from langchain_community.utilities import SQLDatabase
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
-import config as cfg
-import functions as fn
+from Code import config as cfg
+from Code import functions as fn
 
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
@@ -93,7 +93,7 @@ def query_collection_azure(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K, model_
 
 
 def write_query_azure(question: str, client: AzureOpenAI, context_tables: str, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
-    """Generate SQL query to fetch information using Azure OpenAI."""
+    """Args: question (str)client (AzureOpenAI), context_tables (str), db_dialect (str)"""
 
     system_message = cfg.SQL_GEN_SYSTEM_MESSAGE
     user_prompt = f"Question: {question}\nDialect: {db_dialect}\nTables Info: {context_tables}"
