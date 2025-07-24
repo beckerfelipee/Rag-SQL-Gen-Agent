@@ -184,3 +184,4 @@ cython_debug/
 
 #Other
 *copilot-instructions.md
+*.log

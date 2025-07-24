@@ -6,15 +6,30 @@ to validate correctness. Vector DB retrieval and error handling are also tested.
 Run the tests using:  pytest Test_Files/test_write_query_azure.py -v -s
 """
 
-#Intergation tests for write_query_azure function. Made only for the sakila database.
-# These tests will compare the results of the generated query with expected queries that we know produce correct results.
-
 import os
 import sys
 import sqlite3
 import pytest
+import logging
+import datetime
 from dotenv import load_dotenv
 from langchain_community.utilities import SQLDatabase
+
+# Ensure logs directory exists inside Test_Files
+log_dir = os.path.join(os.path.dirname(__file__), "logs")
+os.makedirs(log_dir, exist_ok=True)
+date = datetime.datetime.now().strftime("%Y-%m-%d")
+
+# Configure logging to file and console
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler(os.path.join(log_dir, f"test_write_query_azure_{date}.log"), mode='w', encoding='utf-8'),
+        logging.StreamHandler()
+    ]
+)
+logger = logging.getLogger(__name__)
 
 try:
     import Code
@@ -23,9 +38,6 @@ except ImportError:
 
 from Code.azure_functions import write_query_azure, query_collection_azure, client
 import Code.config as cfg
-
-# Add the project root to the Python path instead of just the Code directory
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Load environment variables
 load_dotenv()
@@ -126,7 +138,8 @@ test_cases = [
         "question": "List the top 5 most rented movie categories.",
         "expected_query": "SELECT c.name, COUNT(r.rental_id) AS rental_count FROM category c JOIN film_category fc ON c.category_id = fc.category_id JOIN film f ON fc.film_id = f.film_id JOIN inventory i ON f.film_id = i.film_id JOIN rental r ON i.inventory_id = r.inventory_id GROUP BY c.category_id, c.name ORDER BY rental_count DESC LIMIT 5;",
         "description": "Top rented categories"
-    }]
+    }
+]
 
 @pytest.fixture
 def db_connection():
@@ -140,47 +153,49 @@ class TestWriteQueryAzure:
     """Test cases for write_query_azure function by comparing query results."""
     
     def test_write_query_azure_results_comparison(self, db_connection):
-        """ Args:
-        db_connection: Database connection fixture.
+        """
+        Args:
+            db_connection: Database connection fixture.
         This function will run a series of tests to validate the query generation and execution process.
-        It will compare the results of the generated query against expected queries that are known to produce correct"""
+        It will compare the results of the generated query against expected queries that are known to produce correct
+        """
         
         cursor = db_connection.cursor()
         passed_tests = 0
         total_tests = len(test_cases)
         
-        print(f"\n🧪 Running {total_tests} query generation tests...\n")
+        logger.info("🧪 Running %d query generation tests...", total_tests)
         
         for i, test_case in enumerate(test_cases):
             question = test_case["question"]
             expected_query = test_case["expected_query"]
             description = test_case["description"]
             
-            print(f"🔍 Test {i+1}/{total_tests}: {description}")
-            print(f"   Question: {question}")
+            logger.info("🔍 Test %d/%d: %s", i+1, total_tests, description)
+            logger.info("   Question: %s", question)
             
             # Step 1: Execute expected query to get correct results
             try:
                 cursor.execute(expected_query)
                 expected_results = cursor.fetchall()
-                print(f"   ✓ Expected query executed: {len(expected_results)} results")
-                print(f"   📊 Expected query: {expected_query}")
+                logger.info("   ✓ Expected query executed: %d results", len(expected_results))
+                logger.info("   📊 Expected query: %s", expected_query)
             except Exception as e:
-                print(f"   ❌ Error executing expected query: {e}")
+                logger.error("   ❌ Error executing expected query: %s", e)
                 continue
             
             # Step 2: Get relevant tables from vector database
             try:
                 tables = query_collection_azure(prompt=question)
                 if not tables or not tables.get("documents"):
-                    print("   ⚠️ No relevant tables found for question")
+                    logger.warning("   ⚠️ No relevant tables found for question")
                     continue
                     
                 context_tables = "\n".join(tables["documents"])
-                print(f"   ✓ Retrieved {len(tables['documents'])} relevant tables")
+                logger.info("   ✓ Retrieved %d relevant tables", len(tables['documents']))
                 
             except Exception as e:
-                print(f"   ❌ Error querying vector collection: {e}")
+                logger.error("   ❌ Error querying vector collection: %s", e)
                 continue
             
             # Step 3: Generate query using Azure OpenAI
@@ -192,42 +207,42 @@ class TestWriteQueryAzure:
                 )
                 
                 generated_query = result.get("query")
-                print(f"   🤖 Generated query: {generated_query}")
+                logger.info("   🤖 Generated query: %s", generated_query)
                 
                 if generated_query == "Error generating query":
-                    print("   ❌ Query generation failed")
+                    logger.error("   ❌ Query generation failed")
                     continue
                     
                 if not generated_query.strip().lower().startswith("select"):
-                    print("   ⚠️ Generated query is not a SELECT statement")
+                    logger.warning("   ⚠️ Generated query is not a SELECT statement")
                     continue
                     
             except Exception as e:
-                print(f"   ❌ Error calling write_query_azure: {e}")
+                logger.error("   ❌ Error calling write_query_azure: %s", e)
                 continue
             
             # Step 4: Execute generated query and compare results
             try:
                 cursor.execute(generated_query)
                 generated_results = cursor.fetchall()
-                print(f"   ✓ Generated query executed: {len(generated_results)} results")
+                logger.info("   ✓ Generated query executed: %d results", len(generated_results))
                 
                 # Compare the results
                 if self._compare_query_results(expected_results, generated_results):
-                    print("   ✅ TEST PASSED: Results match!")
+                    logger.info("   ✅ TEST PASSED: Results match!")
                     passed_tests += 1
                 else:
-                    print("   ❌ TEST FAILED: Results don't match")
-                    print(f"      Expected: {expected_results[:2]}{'...' if len(expected_results) > 2 else ''}")
-                    print(f"      Generated: {generated_results[:2]}{'...' if len(generated_results) > 2 else ''}")
+                    logger.error("   ❌ TEST FAILED: Results don't match")
+                    logger.error("      Expected: %s", expected_results[:2] if len(expected_results) > 2 else expected_results)
+                    logger.error("      Generated: %s", generated_results[:2] if len(generated_results) > 2 else generated_results)
                     
             except Exception as e:
-                print(f"   ❌ Error executing generated query: {e}")
+                logger.error("   ❌ Error executing generated query: %s", e)
                 
-            print()  # Add spacing between tests
+            logger.info("")  # Add spacing between tests
         
         # Final summary
-        print(f"🎯 Test Summary: {passed_tests}/{total_tests} tests passed ({passed_tests/total_tests*100:.1f}%)")
+        logger.info("🎯 Test Summary: %d/%d tests passed (%.1f%%)", passed_tests, total_tests, passed_tests/total_tests*100)
         
         # Assert that at least 70% of tests pass (adjust threshold as needed)
         assert passed_tests >= total_tests * 0.7, f"Only {passed_tests}/{total_tests} tests passed. Expected at least 70%."
@@ -269,7 +284,7 @@ class TestWriteQueryAzure:
         
         # Should return error or handle gracefully
         assert "query" in result, "Result should contain 'query' key"
-        print(f"✅ Error handling test: {result['query']}")
+        logger.info("✅ Error handling test: %s", result['query'])
     
     def test_vector_database_integration(self):
         """Test that vector database returns relevant tables for questions."""
@@ -281,23 +296,23 @@ class TestWriteQueryAzure:
         ]
         
         for question in test_questions:
-            print(f"\n🔍 Testing vector DB for: {question}")
+            logger.info("🔍 Testing vector DB for: %s", question)
             
             try:
                 tables = query_collection_azure(prompt=question)
                 
                 if tables and tables.get("documents"):
-                    print(f"   ✓ Retrieved {len(tables['documents'])} tables")
+                    logger.info("   ✓ Retrieved %d tables", len(tables['documents']))
                     # Check that we got actual table schemas
                     for doc in tables["documents"][:2]:  # Show first 2
-                        print(f"   📋 Table info: {doc[:100]}...")
+                        logger.info("   📋 Table info: %s...", doc[:100])
                 else:
-                    print("   ⚠️ No tables retrieved")
+                    logger.warning("   ⚠️ No tables retrieved")
                     
             except Exception as e:
-                print(f"   ❌ Error querying vector database: {e}")
+                logger.error("   ❌ Error querying vector database: %s", e)
 
 
 if __name__ == "__main__":
     # Run tests with verbose output
-    pytest.main([__file__, "-v", "-s"])
+    pytest.main(["-v", "-s", __file__])
