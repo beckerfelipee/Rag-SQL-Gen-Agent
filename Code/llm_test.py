@@ -1,8 +1,8 @@
-from functions import test_model
+from Code.functions import test_model
 from dotenv import load_dotenv
 from langchain_community.chat_models import ChatOllama
 import os
-import config as cfg
+from Code import config as cfg
 
 
 if __name__ == '__main__':

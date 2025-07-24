@@ -8,8 +8,8 @@ from langchain_community.utilities import SQLDatabase
 from dotenv import load_dotenv
 from openai import AzureOpenAI
 
-import config as cfg
-import functions as fn
+from Code import config as cfg
+from Code import functions as fn
 
 import chromadb
 from chromadb.utils.embedding_functions import OpenAIEmbeddingFunction
@@ -19,7 +19,7 @@ import time
 
 load_dotenv()
 
-DEBUG = True
+DEBUG = False
 
 client = AzureOpenAI(
     api_key=os.getenv("API_KEY_AZURE"),
@@ -93,7 +93,7 @@ def query_collection_azure(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K, model_
 
 
 def write_query_azure(question: str, client: AzureOpenAI, context_tables: str, db_dialect: str = cfg.DB_DIALECT_BASE) -> dict:
-    """Generate SQL query to fetch information using Azure OpenAI."""
+    """Args: question (str)client (AzureOpenAI), context_tables (str), db_dialect (str)"""
 
     system_message = cfg.SQL_GEN_SYSTEM_MESSAGE
     user_prompt = f"Question: {question}\nDialect: {db_dialect}\nTables Info: {context_tables}"
@@ -157,12 +157,31 @@ def generate_answer_azure(state: State, client: AzureOpenAI) -> str:
 
     return response.choices[0].message.content
 
-def question_and_answer_azure(question, database ) -> State:
-    """Process a question and return the answer using Azure OpenAI."""
-
+def question_and_answer_azure(question : str, database ) -> State:
+    """
+    Processes a natural language question, retrieves relevant tables from an Azure vector database, 
+    generates an SQL query, executes it, and returns the results along with a generated answer.
+    Args:
+        question (str): The natural language question to be answered.
+        database: The database connection or object to execute the generated SQL query.
+    Returns:
+        State: An object containing the question, relevant tables, generated query, query results, 
+        total result count, and the generated answer.
+    Workflow:
+        1. Stores the question in the state.
+        2. Retrieves relevant tables from the Azure vector database using the question as a prompt.
+        3. If no tables are found, returns a state indicating no answer.
+        4. Generates an SQL query based on the question and retrieved tables.
+        5. Executes the query and stores the results.
+        6. Generates a natural language answer based on the query results.
+        7. Streams the answer in chunks to the console.
+        8. Returns the final state containing all relevant information.
+    Raises:
+        None explicitly, but handles cases where no relevant tables are found or query generation fails.
+    """
+    
     state = fn.State()
     state["question"] = question
-    print("Question: ", state["question"])
     state["query"] = ""
     state["result"] = ""
 
@@ -203,6 +222,7 @@ def question_and_answer_azure(question, database ) -> State:
         state["result"] = results
     else:
         state["result"] = "Empty"
+        total_count = 0
 
     print(state)
 

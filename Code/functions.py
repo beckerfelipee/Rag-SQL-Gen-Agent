@@ -19,7 +19,7 @@ import ast # transform string to python literal
 from typing import TypedDict
 
 # Config
-import config as cfg
+from Code import config as cfg
 # Extract environment variables from .env file
 load_dotenv()
 
