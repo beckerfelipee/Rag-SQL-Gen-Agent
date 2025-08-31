@@ -10,7 +10,7 @@ RAG SQL Agent is a Retrieval-Augmented Generation (RAG) application designed to 
 - **Streamlit UI**: Provides an intuitive interface for user interaction.
 - **Local and Remote LLM Support**: Supports both local and remote Ollama servers for language model inference.
 
-### Key Directories and Files
+### Key Directories and Files 
 
 - **Code/**: Contains the core application logic, including database interaction, LLM integration, and utility functions.
 - **DB/**: Stores the SQLite database (`sakila.db`).
