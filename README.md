@@ -7,7 +7,7 @@ RAG SQL Agent is a Retrieval-Augmented Generation (RAG) application designed to 
 - **Natural Language to SQL**: Converts user questions into SQL queries.
 - **Database Interaction**: Supports querying SQLite databases.
 - **Vector Database Integration**: Uses ChromaDB for vectorized document storage and retrieval.
-- **Streamlit UI**: Provides an intuitive interface for user interaction.
+- **Streamlit UI**: Provides an intuitive interface for user interaction. 
 - **Local and Remote LLM Support**: Supports both local and remote Ollama servers for language model inference.
 
 ### Key Directories and Files 
