@@ -31,8 +31,7 @@ def db_extract(db) -> list[str]:
     tables_info = db.get_table_info_no_throw()
     docs = tables_info.split("\n\n\n")
     if cfg.REMOVE_EXAMPLES:
-        if cfg.REMOVE_EXAMPLES:
-            docs = [doc.split("\n\n")[0] for doc in docs]
+        docs = [doc.split("\n\n")[0] for doc in docs]
     return docs
 
 # Vector collection management
@@ -92,7 +91,7 @@ def query_collection(prompt: str, top_k: int = cfg.EMBEDDING_TOP_K) -> dict:
 # LLM test
 
 def test_model(llm: ChatOllama) -> None:    
-    response = llm.invoke("Olá, como você está?")   
+    response = llm.invoke("Hello, how are you?")   
     print(response.content)
 
 # Write SQL query

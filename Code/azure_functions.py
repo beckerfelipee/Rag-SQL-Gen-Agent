@@ -68,7 +68,7 @@ def write_query_azure(question: str, client: AzureOpenAI, context_tables: str, d
         json_end = content.find('}', json_start) + 1
         json_str = content[json_start:json_end]
         result = json.loads(json_str)
-        print(f"Raw response: {content}")
+        # print(f"Raw response: {content}")
         print(result)
         return {"query": result["query"]}
     except Exception as e:
@@ -113,7 +113,7 @@ def question_and_answer_azure(question, database ) -> State:
 
     state = fn.State()
     state["question"] = question
-    print("Question: ", state["question"])
+    # print("Question: ", state["question"])
     state["query"] = ""
     state["result"] = ""
 
@@ -137,7 +137,7 @@ def question_and_answer_azure(question, database ) -> State:
     else:
         state["result"] = "Empty"
 
-    print(state)
+    # print(state)
 
     state["total_count"] = total_count
     state["answer"] = generate_answer_azure(state=state, client=client)
@@ -146,7 +146,6 @@ def question_and_answer_azure(question, database ) -> State:
     for chunk in state["answer"]:
         print(chunk, end="", flush=True)
 
-    print(state["answer"])
     print("Total Results: ", state["total_count"])
     print("Result: ", state["result"])
 
@@ -158,66 +157,3 @@ if __name__ == "__main__":
 
     db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
     question_and_answer_azure(question = 'How many actors in db', database = db)
-
-
-
-
-
-    """
-    print("API_KEY_AZURE:", os.getenv("API_KEY_AZURE"))
-    print("API_VERSION_AZURE:", os.getenv("API_VERSION_AZURE"))
-    print("API_ENDPOINT_AZURE:", os.getenv("API_ENDPOINT_AZURE"))
-    print("MODEL_AZURE:", os.getenv("MODEL_AZURE"))"""
-
-    """
-    db = SQLDatabase.from_uri(f"sqlite:///{cfg.DB_PATH}")
-
-    # Script to run the application
-    state = fn.State()
-    state["question"] = "How many actors are in the database?"
-    print("Question: ", state["question"])
-    state["query"] = ""
-    state["result"] = ""
-
-    # Get the context tables using local Ollama server
-    tables = fn.query_collection(prompt=state["question"])
-
-    context = tables["documents"]
-    state["query"] = write_query_azure(
-        question=state["question"],
-        client=client,
-        context_tables=tables["documents"]
-    )["query"]
-
-    state["tables_info"] = "\n---\n".join(context)
-
-    print(state["query"])
-
-    if state["query"] != "Error generating query":
-        results, total_count = fn.create_view(query=state["query"], db=db)
-        # print("Results: ", results) # All results of the query
-        state["result"] = fn.reduce_rows(results=results, max_results=cfg.MAX_RESULTS_LLM)
-    else:
-        state["result"] = "Empty"
-
-    print(state)
-
-    state["total_count"] = total_count
-
-    state["answer"] = generate_answer_azure(state=state, client=client)
-
-    # Stream the answer
-    for chunk in state["answer"]:
-        print(chunk, end="", flush=True) """
-
-
-
-
-    
-    # You can now use this collection to add documents, query, etc.
-    # For example, you can add a document:
-    # collection.add(documents=["This is a test document."], ids=["1"])
-    
-    # To query the collection:
-    # results = collection.query(query_texts=["What is the test document?"])
-    # print(results)

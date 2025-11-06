@@ -13,7 +13,7 @@ if __name__ == '__main__':
     base_url = os.getenv("OLLAMA_LOCAL_SERVER") if cfg.RUN_LOCALLY else os.getenv("OLLAMA_SERVER")
 
     # Initialize the model
-    llm = ChatOllama(base_url=base_url, model=cfg.LLM_MODEL, temperature=cfg.LLM_TEMPERATURE)
+    llm = ChatOllama(base_url=base_url, model=cfg.ANSWER_LLM_MODEL, temperature=cfg.ANSWER_LLM_TEMPERATURE)
 
     # Test the model
     test_model(llm=llm)

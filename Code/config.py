@@ -11,7 +11,7 @@ DB_PATH = "DB//sakila.db"
 VECTOR_DB_PATH = "Vector_DB/vectorized_db"
 
 # Extract database tables and their information
-REMOVE_EXAMPLES = True  # Set to True to remove examples from the table information
+REMOVE_EXAMPLES = False # Set to True to remove examples from the table information
 
 # Embedding model to use for vectorization
 EMBEDDING_MODEL = "nomic-embed-text:latest"
@@ -39,14 +39,16 @@ DISTANCE_CUTOFF = 0.55
 
 # --- LLM model to use for natural language responses Locally --- #
 
+OLLAMA_PATH = r"C:\Users\becke\AppData\Local\Programs\Ollama\ollama.exe"
+
 # LLM model to use for generating SQL queries and answers
 # SQL_LLM_MODEL = "gemma3:27b"
-SQL_LLM_MODEL = "llama3.2:3b"  # Model for SQL query generation
+SQL_LLM_MODEL = "llama3.1:8b"  # Model for SQL query generation
 SQL_LLM_TEMPERATURE = 0.2  # Temperature for the SQL query generation
 SQL_LLM_TOP_P = 0.9  # Top-p sampling for the SQL query generation
 
 # Options: "llama3.2:3b", "gemma3:27b", "llama3.3:70b"
-ANSWER_LLM_MODEL = "llama3.2:3b"
+ANSWER_LLM_MODEL = "llama3.1:8b"
 ANSWER_LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
 ANSWER_LLM_TOP_P = 0.9  # Top-p sampling for the LLM response
 
@@ -118,9 +120,9 @@ Context:
 
 Important instructions:
 - Only respond to questions that are clearly related to databases or the provided data context.
-- If SQL query and result to answer are available, display them to answer the question.
+- If result to answer is available, display it to answer the question.
+- If result to answer is available, make it clear that the user has access to the full result set by clicking on "Query Results".
 - If both SQL query and result are empty, attempt to answer using the tables Info.
-- Make it clear that the user has access to the full result set by clicking on "Query Results".
 - Format data clearly using Markdown (tables, lists, etc.) when appropriate.
 - Explain findings in a simple, objective, and easy-to-understand way.
 - Do NOT suggest alternative queries or hypothetical solutions.

@@ -54,8 +54,8 @@ if __name__ == '__main__':
     col1, col2, col3, col4 = st.columns([1, 1, 1, 1])
     info = st.empty()
 
-    with st.container(height=650, border=False):
-        messages = st.container(height=550)
+    with st.container(height=550, border=False):
+        messages = st.container(height=500)
         if prompt := st.chat_input("Ask a question about the database", max_chars=300):
             messages.chat_message("user").write(prompt)
             # st.toast("Thinking..")

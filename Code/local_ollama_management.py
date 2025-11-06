@@ -1,6 +1,7 @@
 import os
 import subprocess
 import psutil
+from config import OLLAMA_PATH
 
 # Ollama server management
 
@@ -9,7 +10,7 @@ def start_ollama():
     print("\nStarting Ollama server...")
     try:
         with open(os.devnull, 'w') as devnull:
-            subprocess.Popen(['ollama', 'serve'], stdout=devnull, stderr=devnull)
+            subprocess.Popen([OLLAMA_PATH, 'serve'], stdout=devnull, stderr=devnull)
         print("Ollama server started.")
     except Exception as e:
         print(f"Failed to initiate Ollama: {e}")
