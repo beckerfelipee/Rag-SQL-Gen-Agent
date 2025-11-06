@@ -37,7 +37,7 @@ DISTANCE_CUTOFF = 0.55
 # Rerank cutoff
 # RERANK_CUTOFF = 1 # score
 
-# --- LLM model to use for natural language responses --- #
+# --- LLM model to use for natural language responses Locally --- #
 
 # LLM model to use for generating SQL queries and answers
 # SQL_LLM_MODEL = "gemma3:27b"
@@ -51,12 +51,11 @@ ANSWER_LLM_TEMPERATURE = 0.1  # Temperature for the LLM response
 ANSWER_LLM_TOP_P = 0.9  # Top-p sampling for the LLM response
 
 
-
 # --- Azure OpenAI Configuration --- #
 
 
 MODEL_AZURE = 'gpt-4.1'
-MODEL_EMBEDDINGS_AZURE = ''
+# MODEL_EMBEDDINGS_AZURE = ''
 API_VERSION_AZURE = "2023-07-01-preview"
 API_TYPE_AZURE = 'gpt-4.1'
 
@@ -71,7 +70,6 @@ ANSWER_LLM_MODEL_AZURE = 'gpt-4.1'
 ANSWER_LLM_TEMPERATURE_AZURE = 0.1  # Temperature for the LLM response
 ANSWER_LLM_TOP_P_AZURE = 0.9  # Top-p sampling for the LLM response
 ANSWER_LLM_MAX_TOKENS_AZURE = 1024  # Maximum tokens for the LLM response
-
 
 
 # System message to generate SQL queries
@@ -130,5 +128,4 @@ Important instructions:
 - Never answer questions that are unrelated to databases or the provided context.
 - Provide your answers in english, or the language of the question if specified.
 """
-# - If there is not enough information to answer, clearly state that.
 
