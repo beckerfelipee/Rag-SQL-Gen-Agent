@@ -1,6 +1,6 @@
 # RAG SQL Agent 
 
-RAG SQL Agent is a Retrieval-Augmented Generation (RAG) application designed to interact with SQL databases using natural language queries. It leverages advanced language models to generate SQL queries, retrieve relevant data, and provide human-readable answers.
+RAG SQL Agent is a Retrieval-Augmented Generation (RAG) application designed to interact with SQL databases using natural language queries. It leverages advanced language models to generate SQL queries, retrieve relevant data, and provide human-readable answers. 
  
 ## Features
 
